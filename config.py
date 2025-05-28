@@ -1,0 +1,6 @@
+API_KEY = "mx0vglEYxdriYd4bKs"
+API_SECRET = "c5fcbc80f196471984a785dfa8438f72"
+
+# Telegram Bot Token e Chat ID para notificações
+TELEGRAM_BOT_TOKEN = "8128117063:AAFizW_TwlbPWygmHZrqcCfJ-RiEQQyOcE0"
+TELEGRAM_CHAT_ID = "1094115572"
