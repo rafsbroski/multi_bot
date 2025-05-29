@@ -1,26 +1,23 @@
-def analisar_mercado(candles):
-    if len(candles) < 15:
-        return False  # Não há dados suficientes para calcular o RSI
+import pandas as pd
 
-    subidas = []
-    descidas = []
+def analisar_sinal(candles):
+    df = pd.DataFrame(candles)
+    df.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+    df['close'] = pd.to_numeric(df['close'])
 
-    for i in range(1, 15):
-        dif = candles[-i]["close"] - candles[-i - 1]["close"]
-        if dif > 0:
-            subidas.append(dif)
-            descidas.append(0)
-        else:
-            subidas.append(0)
-            descidas.append(abs(dif))
+    delta = df['close'].diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
 
-    media_subidas = sum(subidas) / 14
-    media_descidas = sum(descidas) / 14
+    avg_gain = gain.rolling(window=14).mean()
+    avg_loss = loss.rolling(window=14).mean()
 
-    if media_descidas == 0:
-        return False  # Evitar divisão por zero
-
-    rs = media_subidas / media_descidas
+    rs = avg_gain / avg_loss
     rsi = 100 - (100 / (1 + rs))
 
-    return rsi < 30 or rsi > 70
+    if rsi.iloc[-1] < 30:
+        return "compra"
+    elif rsi.iloc[-1] > 70:
+        return "venda"
+    else:
+        return False
