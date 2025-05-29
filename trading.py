@@ -1,61 +1,50 @@
-import random
+# trading.py
+
 from mexc_api import abrir_posicao, fechar_posicoes_anteriores, verificar_posicoes_ativas
 from protecao import verificar_limites, aplicar_stop_loss
-from telegram_alerts import notificar_telegram
-from config import PAIRS
+from telegram_alerts import enviar_mensagem
+from config import PAIRS, RISCO_POR_TRADE
 
-def executar_ordem(sinais_especialistas, cliente):
-    for par in PAIRS:
-        sinais = sinais_especialistas.get(par, [])
-        if len(sinais) == 0:
-            continue
+def executar_ordem(par: str, direcao: str):
+    """
+    Executa uma ordem de mercado em 'par' com direção 'long' ou 'short'.
+    Primeiro verifica proteções, depois checa se já não existe
+    posição ativa e enfim abre a ordem e aplica stop-loss.
+    """
+    # 1) Proteção geral (capital mínimo, drawdown, etc)
+    if not verificar_limites():
+        enviar_mensagem(f"🚨 Operação bloqueada por limites de segurança ({par})")
+        return False
 
-        direcao_final = analisar_consenso(sinais)
+    # 2) Só abre se não houver posição ativa
+    if verificar_posicoes_ativas(par):
+        enviar_mensagem(f"⚠️ Já existe uma posição aberta em {par}")
+        return False
 
-        if direcao_final is None:
-            continue
+    # 3) Fecha ordens anteriores (se houver)
+    fechar_posicoes_anteriores(par)
 
-        if not verificar_limites(cliente):
-            notificar_telegram(f"🚨 Operação bloqueada por limites de segurança ({par})")
-            continue
+    # 4) Calcula tamanho de acordo com risco por trade
+    from mexc_api import client
+    saldo = client.fetch_balance()['free']['USDT']
+    tamanho = round(saldo * RISCO_POR_TRADE, 2)
+    if tamanho <= 0:
+        enviar_mensagem(f"❌ Saldo insuficiente para abrir posição em {par}")
+        return False
 
-        if verificar_posicoes_ativas(cliente, par):
-            notificar_telegram(f"⚠ Já existe uma posição aberta em {par}")
-            continue
+    # 5) Abre a ordem
+    sucesso = abrir_posicao(par, direcao, tamanho)
+    if not sucesso:
+        enviar_mensagem(f"❌ Falha ao abrir {direcao.upper()} em {par}")
+        return False
 
-        fechar_posicoes_anteriores(cliente, par)
+    enviar_mensagem(f"✅ Entrada {direcao.upper()} em {par} de {tamanho} USDT")
 
-        tamanho = calcular_tamanho_posicao(cliente, par)
-        if tamanho <= 0:
-            notificar_telegram(f"❌ Tamanho da posição em {par} é inválido.")
-            continue
-
-        resultado = abrir_posicao(cliente, par, direcao_final, tamanho)
-
-        if resultado:
-            notificar_telegram(f"✅ Entrada {direcao_final.upper()} em {par} com {tamanho} USDT.")
-        else:
-            notificar_telegram(f"❌ Falha ao abrir posição em {par}.")
-
-        aplicar_stop_loss(cliente, par)
-
-def analisar_consenso(sinais):
-    if len(sinais) < 5:
-        return None
-    long_count = sinais.count("long")
-    short_count = sinais.count("short")
-    if long_count >= 4:
-        return "long"
-    elif short_count >= 4:
-        return "short"
-    else:
-        return None
-
-def calcular_tamanho_posicao(cliente, par):
+    # 6) Configura stop-loss
     try:
-        saldo = cliente.obter_saldo_disponivel()
-        tamanho = saldo * 0.95  # usa 95% do capital disponível
-        return round(tamanho, 2)
+        aplicar_stop_loss(par)
     except Exception as e:
-        print(f"Erro ao calcular tamanho: {e}")
-        return 0
+        # só loga, mas não impede a ordem
+        print(f"[WARN] falha ao aplicar stop-loss em {par}: {e}")
+
+    return True
