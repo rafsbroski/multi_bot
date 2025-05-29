@@ -4,8 +4,8 @@ from protecao import verificar_limites, aplicar_stop_loss
 from telegram_alerts import notificar_telegram
 from config import PAIRS
 
-def executar_trading(sinais_especialistas, cliente):
-    for par in PARES:
+def executar_ordem(sinais_especialistas, cliente):
+    for par in PAIRS:
         sinais = sinais_especialistas.get(par, [])
         if len(sinais) == 0:
             continue
