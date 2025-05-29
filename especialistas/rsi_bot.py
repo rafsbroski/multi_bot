@@ -1,26 +1,26 @@
-def calcular_rsi(closes, periodo=10):  # Período mais curto para candles 5m
-    ganhos = 0
-    perdas = 0
-    for i in range(1, periodo + 1):
-        delta = closes[-i] - closes[-i - 1]
-        if delta > 0:
-            ganhos += delta
-        else:
-            perdas -= delta
-    if perdas == 0:
-        return 100
-    rs = ganhos / perdas
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
+def analisar_mercado(candles):
+    if len(candles) < 15:
+        return False  # Não há dados suficientes para calcular o RSI
 
-def avaliar_rsi(candles):
-    closes = [float(c[4]) for c in candles]
-    if len(closes) < 11:
-        return "Hold"
-    rsi = calcular_rsi(closes)
-    if rsi > 64:
-        return "Sell"
-    elif rsi < 36:
-        return "Buy"
-    else:
-        return "Hold"
+    subidas = []
+    descidas = []
+
+    for i in range(1, 15):
+        dif = candles[-i]["close"] - candles[-i - 1]["close"]
+        if dif > 0:
+            subidas.append(dif)
+            descidas.append(0)
+        else:
+            subidas.append(0)
+            descidas.append(abs(dif))
+
+    media_subidas = sum(subidas) / 14
+    media_descidas = sum(descidas) / 14
+
+    if media_descidas == 0:
+        return False  # Evitar divisão por zero
+
+    rs = media_subidas / media_descidas
+    rsi = 100 - (100 / (1 + rs))
+
+    return rsi < 30 or rsi > 70

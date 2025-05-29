@@ -1,6 +1,31 @@
 import os
+from dotenv import load_dotenv
 
-API_KEY = os.getenv("API_KEY")
-API_SECRET = os.getenv("API_SECRET")
+load_dotenv()
+
+# Chaves da MEXC (vindas do ficheiro .env)
+MEXC_API_KEY = os.getenv("API_KEY")
+MEXC_SECRET_KEY = os.getenv("API_SECRET")
+
+# Telegram
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+# Lista de pares a operar (todos USDT-M)
+PARES = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
+
+# Alavancagem fixa (x50)
+ALAVANCAGEM = 50
+
+# Risco máximo por operação (% do saldo)
+RISCO_POR_TRADE = 0.05  # 5%
+
+# Proteção inteligente
+STOP_LOSS_PERCENT = 5   # % de stop-loss por trade
+RETIRADA_SEMANAL = 0.10 # % dos lucros semanais a retirar
+
+# Consenso dos especialistas
+MINIMO_CONSENSO = 4  # de 5
+
+# Limite de trades por dia (opcional, 0 = ilimitado)
+MAX_TRADES_DIA = 0

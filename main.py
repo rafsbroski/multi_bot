@@ -1,73 +1,62 @@
-import os
 import time
-import logging
-import telebot
-from config import client, symbol, leverage, quantity, stop_loss_percent
-from dotenv import load_dotenv
-from helpers.entry_conditions import should_open_long, should_open_short
-from helpers.exit_conditions import should_close_long, should_close_short
-from helpers.order_execution import execute_long_entry, execute_short_entry, close_position
+from config import PAIRS, CHECK_INTERVAL
+from especialistas import especialista_rsi, especialista_media_movel, especialista_macd, especialista_volume, especialista_price_action
+from trading import executar_ordem
+from protecao import verificar_protecao
+from telegram_bot import enviar_mensagem
 
-load_dotenv()
+especialistas = [
+    especialista_rsi,
+    especialista_media_movel,
+    especialista_macd,
+    especialista_volume,
+    especialista_price_action,
+]
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-
-bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
-
-def send_telegram_message(message):
-    try:
-        bot.send_message(TELEGRAM_CHAT_ID, message)
-        logging.info(f"Mensagem enviada: {message}")
-    except Exception as e:
-        logging.error(f"Erro ao enviar mensagem para o Telegram: {e}")
-
-def main_loop():
-    send_telegram_message("🤖 Bot iniciado com sucesso!")
-
-    position = None
-    entry_price = None
-
-    while True:
+def analisar_sinal(precos, par):
+    sinais = []
+    for especialista in especialistas:
         try:
-            mark_price_data = client.get_market_price(symbol=symbol)
-            mark_price = float(mark_price_data["price"])
-            logging.info(f"Preço atual do mercado: {mark_price}")
-
-            if position is None:
-                if should_open_long(mark_price):
-                    execute_long_entry(client, symbol, quantity, leverage)
-                    position = "long"
-                    entry_price = mark_price
-                    send_telegram_message(f"🔼 Entrada em LONG a {entry_price}")
-                elif should_open_short(mark_price):
-                    execute_short_entry(client, symbol, quantity, leverage)
-                    position = "short"
-                    entry_price = mark_price
-                    send_telegram_message(f"🔽 Entrada em SHORT a {entry_price}")
-
-            elif position == "long":
-                if should_close_long(mark_price, entry_price, stop_loss_percent):
-                    close_position(client, symbol)
-                    send_telegram_message(f"📤 Saída do LONG a {mark_price}")
-                    position = None
-                    entry_price = None
-
-            elif position == "short":
-                if should_close_short(mark_price, entry_price, stop_loss_percent):
-                    close_position(client, symbol)
-                    send_telegram_message(f"📤 Saída do SHORT a {mark_price}")
-                    position = None
-                    entry_price = None
-
-            time.sleep(3)
-
+            sinal = especialista(precos)
+            sinais.append(sinal)
         except Exception as e:
-            logging.error(f"Erro na execução: {e}")
-            send_telegram_message(f"⚠️ Erro detectado: {e}")
-            time.sleep(10)
+            print(f"[ERRO] Especialista falhou ({especialista.__name__}) para o par {par}: {e}")
+            sinais.append(None)
+
+    sinais_validos = [s for s in sinais if s in ['long', 'short']]
+    consenso = None
+    if sinais_validos.count('long') >= 4:
+        consenso = 'long'
+    elif sinais_validos.count('short') >= 4:
+        consenso = 'short'
+    
+    return consenso
+
+def obter_preco_atual(par):
+    from mexc_api import obter_preco_atual
+    return obter_preco_atual(par)
+
+def main():
+    while True:
+        for par in PAIRS:
+            try:
+                preco_atual = obter_preco_atual(par)
+                print(f"\n[{par}] Preço atual: {preco_atual}")
+                consenso = analisar_sinal(preco_atual, par)
+
+                if consenso:
+                    if verificar_protecao():
+                        print(f"[{par}] Sinal: {consenso.upper()} (com consenso de especialistas)")
+                        executar_ordem(par, consenso)
+                        enviar_mensagem(f"✅ Entrada realizada em {par} ({consenso.upper()}) com consenso.")
+                    else:
+                        print(f"[{par}] Proteção ativada. Nenhuma entrada foi realizada.")
+                        enviar_mensagem(f"⚠️ Proteção ativada. Entrada em {par} ({consenso.upper()}) cancelada.")
+                else:
+                    print(f"[{par}] Sem consenso suficiente para entrada.")
+            except Exception as erro:
+                print(f"[ERRO] no par {par}: {erro}")
+        time.sleep(CHECK_INTERVAL)
 
 if __name__ == "__main__":
-    main_loop()
+    main()

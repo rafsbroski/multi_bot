@@ -1,4 +1,6 @@
+ccxt
 python-dotenv
 requests
-ccxt
 pyTelegramBotAPI
+ta
+pandas
