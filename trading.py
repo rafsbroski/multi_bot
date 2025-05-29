@@ -2,7 +2,7 @@ import random
 from mexc_api import abrir_posicao, fechar_posicoes_anteriores, verificar_posicoes_ativas
 from protecao import verificar_limites, aplicar_stop_loss
 from telegram_alerts import notificar_telegram
-from config import PARES
+from config import PAIRS
 
 def executar_trading(sinais_especialistas, cliente):
     for par in PARES:
