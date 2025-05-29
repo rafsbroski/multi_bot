@@ -1,85 +1,73 @@
-import time
-from datetime import datetime, date
-from dotenv import load_dotenv
-load_dotenv()
-from config import API_KEY, API_SECRET
-import ccxt
 import os
-import requests
+import time
+import logging
+import telebot
+from config import client, symbol, leverage, quantity, stop_loss_percent
+from dotenv import load_dotenv
+from helpers.entry_conditions import should_open_long, should_open_short
+from helpers.exit_conditions import should_close_long, should_close_short
+from helpers.order_execution import execute_long_entry, execute_short_entry, close_position
 
-def enviar_telegram(mensagem):
-    token = os.getenv("TELEGRAM_TOKEN")
-    chat_id = os.getenv("TELEGRAM_CHAT_ID")
-    if not token or not chat_id:
-        print("Token ou Chat ID do Telegram não definidos.")
-        return
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {"chat_id": chat_id, "text": mensagem}
+load_dotenv()
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
+
+def send_telegram_message(message):
     try:
-        requests.post(url, data=payload)
+        bot.send_message(TELEGRAM_CHAT_ID, message)
+        logging.info(f"Mensagem enviada: {message}")
     except Exception as e:
-        print("Erro ao enviar mensagem para o Telegram:", e)
+        logging.error(f"Erro ao enviar mensagem para o Telegram: {e}")
 
-exchange = ccxt.mexc({
-    'apiKey': API_KEY,
-    'secret': API_SECRET,
-    'enableRateLimit': True,
-    'options': {'defaultType': 'future'}
-})
+def main_loop():
+    send_telegram_message("🤖 Bot iniciado com sucesso!")
 
-symbol = 'BTC/USDT:USDT'
-leverage = 50
-
-# Define o tamanho da posição (ajuste conforme o capital disponível)
-position_size = 0.05
-
-def obter_tendencia():
-    ohlcv = exchange.fetch_ohlcv(symbol, timeframe='1m', limit=200)
-    closes = [x[4] for x in ohlcv]
-
-    ma10 = sum(closes[-10:]) / 10
-    ma50 = sum(closes[-50:]) / 50
-
-    if ma10 > ma50:
-        return "long"
-    elif ma10 < ma50:
-        return "short"
-    else:
-        return "neutro"
-
-def abrir_ordem(tendencia):
-    side = 'buy' if tendencia == 'long' else 'sell'
-    params = {
-        'positionSide': 'LONG' if tendencia == 'long' else 'SHORT',
-        'leverage': leverage
-    }
-    try:
-        ordem = exchange.create_market_order(symbol, side, position_size, params=params)
-        mensagem = f"✅ Ordem aberta: {tendencia.upper()} no par {symbol} às {datetime.now().strftime('%H:%M:%S')}"
-        print(mensagem)
-        enviar_telegram(mensagem)
-    except Exception as e:
-        mensagem = f"❌ Erro ao abrir ordem: {str(e)}"
-        print(mensagem)
-        enviar_telegram(mensagem)
-
-def main():
-    print("Robô Sniper iniciado...")
-    enviar_telegram("🤖 Robô Sniper iniciado com sucesso!")
+    position = None
+    entry_price = None
 
     while True:
         try:
-            tendencia = obter_tendencia()
-            if tendencia != "neutro":
-                abrir_ordem(tendencia)
-            else:
-                print("🔍 Nenhuma tendência clara. Aguardando...")
-            time.sleep(60)
+            mark_price_data = client.get_market_price(symbol=symbol)
+            mark_price = float(mark_price_data["price"])
+            logging.info(f"Preço atual do mercado: {mark_price}")
+
+            if position is None:
+                if should_open_long(mark_price):
+                    execute_long_entry(client, symbol, quantity, leverage)
+                    position = "long"
+                    entry_price = mark_price
+                    send_telegram_message(f"🔼 Entrada em LONG a {entry_price}")
+                elif should_open_short(mark_price):
+                    execute_short_entry(client, symbol, quantity, leverage)
+                    position = "short"
+                    entry_price = mark_price
+                    send_telegram_message(f"🔽 Entrada em SHORT a {entry_price}")
+
+            elif position == "long":
+                if should_close_long(mark_price, entry_price, stop_loss_percent):
+                    close_position(client, symbol)
+                    send_telegram_message(f"📤 Saída do LONG a {mark_price}")
+                    position = None
+                    entry_price = None
+
+            elif position == "short":
+                if should_close_short(mark_price, entry_price, stop_loss_percent):
+                    close_position(client, symbol)
+                    send_telegram_message(f"📤 Saída do SHORT a {mark_price}")
+                    position = None
+                    entry_price = None
+
+            time.sleep(3)
+
         except Exception as e:
-            mensagem = f"⚠️ Erro inesperado: {str(e)}"
-            print(mensagem)
-            enviar_telegram(mensagem)
-            time.sleep(60)
+            logging.error(f"Erro na execução: {e}")
+            send_telegram_message(f"⚠️ Erro detectado: {e}")
+            time.sleep(10)
 
 if __name__ == "__main__":
-    main()
+    main_loop()
