@@ -1,6 +1,6 @@
 import time
 from config import PAIRS, CHECK_INTERVAL
-from especialistas import especialista_rsi, especialista_media_movel, especialista_macd, especialista_volume, especialista_price_action
+from especialistas import rsi_bot, media_movel_bot, macd_bot, candlestick_bot, price_action_bot
 from trading import executar_ordem
 from protecao import verificar_protecao
 from telegram_bot import enviar_mensagem
