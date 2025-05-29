@@ -1,6 +1,6 @@
-API_KEY = "mx0vglEYxdriYd4bKs"
-API_SECRET = "c5fcbc80f196471984a785dfa8438f72"
+import os
 
-# Telegram Bot Token e Chat ID para notificações
-TELEGRAM_BOT_TOKEN = "8128117063:AAFizW_TwlbPWygmHZrqcCfJ-RiEQQyOcE0"
-TELEGRAM_CHAT_ID = "1094115572"
+API_KEY = os.getenv("API_KEY")
+API_SECRET = os.getenv("API_SECRET")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
