@@ -3,7 +3,7 @@ from config import PAIRS, CHECK_INTERVAL
 from especialistas import rsi_bot, media_movel_bot, macd_bot, candlestick_bot, price_action_bot
 from trading import executar_ordem
 from protecao import verificar_protecao
-from telegram_bot import enviar_mensagem
+from telegram_alerts import enviar_mensagem
 
 especialistas = [
     especialista_rsi,
