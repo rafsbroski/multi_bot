@@ -1,62 +1,40 @@
+from candlestick_bot import analisar_sinal as candle_sinal
+from macd_bot import analisar_sinal as macd_sinal
+from rsi_bot import analisar_sinal as rsi_sinal
+from tendencia_bot import analisar_sinal as tendencia_sinal
+from volume_bot import analisar_sinal as volume_sinal
+from telegram_alerts import notificar_telegram as enviar_mensagem
+from bot_controller import executar_ordem
+
 import time
-from config import PAIRS, CHECK_INTERVAL
-from especialistas import rsi_bot, media_movel_bot, macd_bot, candlestick_bot, price_action_bot
-from trading import executar_ordem
-from protecao import verificar_protecao
-from telegram_alerts import enviar_mensagem
 
-especialistas = [
-    especialista_rsi,
-    especialista_media_movel,
-    especialista_macd,
-    especialista_volume,
-    especialista_price_action,
-]
+pares = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
 
-def analisar_sinal(precos, par):
-    sinais = []
-    for especialista in especialistas:
-        try:
-            sinal = especialista(precos)
-            sinais.append(sinal)
-        except Exception as e:
-            print(f"[ERRO] Especialista falhou ({especialista.__name__}) para o par {par}: {e}")
-            sinais.append(None)
+def analisar_par(par):
+    sinais = [
+        candle_sinal(par),
+        macd_sinal(par),
+        rsi_sinal(par),
+        tendencia_sinal(par),
+        volume_sinal(par)
+    ]
+    sinais_positivos = sinais.count("long")
+    sinais_negativos = sinais.count("short")
 
-    sinais_validos = [s for s in sinais if s in ['long', 'short']]
-    consenso = None
-    if sinais_validos.count('long') >= 4:
-        consenso = 'long'
-    elif sinais_validos.count('short') >= 4:
-        consenso = 'short'
-    
-    return consenso
-
-def obter_preco_atual(par):
-    from mexc_api import obter_preco_atual
-    return obter_preco_atual(par)
-
-def main():
-    while True:
-        for par in PAIRS:
-            try:
-                preco_atual = obter_preco_atual(par)
-                print(f"\n[{par}] Preço atual: {preco_atual}")
-                consenso = analisar_sinal(preco_atual, par)
-
-                if consenso:
-                    if verificar_protecao():
-                        print(f"[{par}] Sinal: {consenso.upper()} (com consenso de especialistas)")
-                        executar_ordem(par, consenso)
-                        enviar_mensagem(f"✅ Entrada realizada em {par} ({consenso.upper()}) com consenso.")
-                    else:
-                        print(f"[{par}] Proteção ativada. Nenhuma entrada foi realizada.")
-                        enviar_mensagem(f"⚠️ Proteção ativada. Entrada em {par} ({consenso.upper()}) cancelada.")
-                else:
-                    print(f"[{par}] Sem consenso suficiente para entrada.")
-            except Exception as erro:
-                print(f"[ERRO] no par {par}: {erro}")
-        time.sleep(CHECK_INTERVAL)
+    if sinais_positivos >= 4:
+        enviar_mensagem(f"[{par}] CONSENSO POSITIVO - LONG ({sinais_positivos}/5)")
+        executar_ordem(par, "long")
+    elif sinais_negativos >= 4:
+        enviar_mensagem(f"[{par}] CONSENSO NEGATIVO - SHORT ({sinais_negativos}/5)")
+        executar_ordem(par, "short")
+    else:
+        enviar_mensagem(f"[{par}] SEM CONSENSO - Nenhuma entrada")
 
 if __name__ == "__main__":
-    main()
+    while True:
+        for par in pares:
+            try:
+                analisar_par(par)
+            except Exception as e:
+                enviar_mensagem(f"[{par}] ERRO: {str(e)}")
+        time.sleep(900)  # Espera 15 minutos antes da próxima análise
