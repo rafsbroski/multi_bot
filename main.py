@@ -1,8 +1,9 @@
-from candlestick_bot import analisar_sinal as candle_sinal
-from macd_bot import analisar_sinal as macd_sinal
-from rsi_bot import analisar_sinal as rsi_sinal
-from tendencia_bot import analisar_sinal as tendencia_sinal
-from volume_bot import analisar_sinal as volume_sinal
+from especialistas.candlestick_bot import analisar_sinal as candle_sinal
+from especialistas.macd_bot import analisar_sinal as macd_sinal
+from especialistas.rsi_bot import analisar_sinal as rsi_sinal
+from especialistas.tendencia_bot import analisar_sinal as tendencia_sinal
+from especialistas.volume_bot import analisar_sinal as volume_sinal
+
 from telegram_alerts import notificar_telegram as enviar_mensagem
 from bot_controller import executar_ordem
 
