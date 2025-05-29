@@ -24,11 +24,13 @@ ALAVANCAGEM = 50
 RISCO_POR_TRADE = 0.05  # 5%
 
 # Proteção inteligente
-STOP_LOSS_PERCENT = 5   # % de stop-loss por trade
-RETIRADA_SEMANAL = 0.10 # % dos lucros semanais a retirar
+STOP_LOSS_PERCENTUAL = 5     # Stop-loss por trade (%)
+CAPITAL_MINIMO = 5           # Capital mínimo para abrir trade (USDT)
+RETIRADA_SEMANAL = 0.10      # Retirada semanal de 10% dos lucros
+TELEGRAM_ATIVO = True        # True para receber alertas
 
 # Consenso dos especialistas
 MINIMO_CONSENSO = 4  # de 5
 
-# Limite de trades por dia (opcional, 0 = ilimitado)
+# Limite de trades por dia (0 = ilimitado)
 MAX_TRADES_DIA = 0
