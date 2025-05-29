@@ -1,11 +1,19 @@
-def analisar_mercado(candles):
-    if len(candles) < 50:
-        return False
+def analisar_sinal(candles):
+    """
+    Analisa médias móveis simples de 9 e 21 períodos para detectar cruzamentos de tendência.
+    Retorna "compra", "venda" ou None.
+    """
+    if len(candles) < 21:
+        return None
 
-    soma_curta = sum(c["close"] for c in candles[-9:])
-    media_curta = soma_curta / 9
+    closes = [c['close'] for c in candles]
 
-    soma_longa = sum(c["close"] for c in candles[-50:])
-    media_longa = soma_longa / 50
+    sma_9 = sum(closes[-9:]) / 9
+    sma_21 = sum(closes[-21:]) / 21
 
-    return media_curta > media_longa or media_curta < media_longa
+    if sma_9 > sma_21:
+        return "compra"
+    elif sma_9 < sma_21:
+        return "venda"
+    else:
+        return None
