@@ -1,4 +1,4 @@
-def analisar_candle(candles):
+def analisar_sinal(candles):
     if len(candles) < 2:
         return False
 
