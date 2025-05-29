@@ -12,7 +12,10 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 # Lista de pares a operar (todos USDT-M)
-PARES = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
+PAIRS = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
+
+# Intervalo de análise dos candles (em minutos)
+CHECK_INTERVAL = 1
 
 # Alavancagem fixa (x50)
 ALAVANCAGEM = 50
