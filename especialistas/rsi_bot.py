@@ -1,16 +1,9 @@
-# especialistas/rsi_bot.py
 import logging
 
-def analisar_rsi(candles):
-    """
-    RSI curto (10) sobre closes dos últimos candles:
-    retorna 'long' se RSI < 36, 'short' se RSI > 64, ou False.
-    """
+def analisar_rsi(candles, par):
     try:
-        # valida entrada
-        if not isinstance(candles, list) or len(candles) < 11:
+        if not isinstance(candles, list) or len(candles) < 15:
             raise ValueError("Estrutura de candles inválida ou insuficiente.")
-        # extrai closes
         closes = []
         for c in candles:
             if isinstance(c, dict) and "close" in c:
@@ -19,26 +12,22 @@ def analisar_rsi(candles):
                 closes.append(float(c[4]))
             else:
                 raise ValueError("Formato de candle inválido.")
-        # calcula RSI de período 10
-        periodo = 10
-        ganhos = perdas = 0.0
-        for i in range(-periodo, 0):
-            delta = closes[i] - closes[i-1]
-            if delta > 0:
-                ganhos += delta
-            else:
-                perdas -= delta
-        if perdas == 0:
-            rsi = 100.0
-        else:
-            rs = ganhos / perdas
-            rsi = 100 - (100 / (1 + rs))
-        # sinal
-        if rsi < 36:
+
+        deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
+        gains = [d if d > 0 else 0 for d in deltas]
+        losses = [-d if d < 0 else 0 for d in deltas]
+        avg_gain = sum(gains[-14:]) / 14
+        avg_loss = sum(losses[-14:]) / 14
+        if avg_loss == 0:
             return "long"
-        if rsi > 64:
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+        if rsi < 30:
+            return "long"
+        if rsi > 70:
             return "short"
         return False
+
     except Exception as e:
         logging.error(f"[especialista_rsi] {e}")
         return False

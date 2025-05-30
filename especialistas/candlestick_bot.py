@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 
-def analisar_candle(candles):
+def analisar_candle(candles, par):
     try:
         if not isinstance(candles, list) or len(candles) == 0:
             raise ValueError("Candles: lista vazia ou inválida.")
@@ -15,13 +15,11 @@ def analisar_candle(candles):
         else:
             raise ValueError("Formato inválido dos candles recebidos.")
 
-        # Converte os valores numéricos
         df["high"] = pd.to_numeric(df["high"], errors="coerce")
         df["low"] = pd.to_numeric(df["low"], errors="coerce")
         df["open"] = pd.to_numeric(df["open"], errors="coerce")
         df["close"] = pd.to_numeric(df["close"], errors="coerce")
 
-        # Verifica se há valores nulos após a conversão
         if df[["open", "high", "low", "close"]].isnull().any().any():
             raise ValueError("Valores nulos após conversão dos candles.")
 
