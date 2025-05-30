@@ -4,17 +4,26 @@ import logging
 def analisar_sinal(candles):
     try:
         df = pd.DataFrame(candles)
-        if df.empty or df.shape[0] < 15:
-            return False
+        if df.empty or len(df.columns) < 5:
+            raise ValueError("RSI: candles inválidos ou incompletos.")
 
-        df['close'] = pd.to_numeric(df['close'], errors='coerce')
-        delta = df['close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / loss
+        df.columns = ["timestamp", "open", "high", "low", "close"]
+        df["close"] = pd.to_numeric(df["close"])
+        delta = df["close"].diff()
+        gain = delta.where(delta > 0, 0)
+        loss = -delta.where(delta < 0, 0)
+        avg_gain = gain.rolling(window=14).mean()
+        avg_loss = loss.rolling(window=14).mean()
+
+        rs = avg_gain / avg_loss
         rsi = 100 - (100 / (1 + rs))
 
-        return rsi.iloc[-1] < 30
+        if rsi.iloc[-1] < 30:
+            return "compra"
+        elif rsi.iloc[-1] > 70:
+            return "venda"
+        else:
+            return "indefinido"
     except Exception as e:
-        logging.error(f"especialista_rsi: {e}")
-        return False
+        logging.error(f"especialista_rsi: {str(e)}")
+        return "indefinido"

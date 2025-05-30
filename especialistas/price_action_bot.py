@@ -4,16 +4,18 @@ import logging
 def analisar_sinal(candles):
     try:
         df = pd.DataFrame(candles)
-        if df.empty or df.shape[0] < 3:
-            return False
+        if df.empty or len(df.columns) < 5:
+            raise ValueError("PriceAction: candles inválidos ou incompletos.")
 
-        df['high'] = pd.to_numeric(df['high'], errors='coerce')
-        df['low'] = pd.to_numeric(df['low'], errors='coerce')
+        df.columns = ["timestamp", "open", "high", "low", "close"]
+        df["close"] = pd.to_numeric(df["close"])
 
-        ultimo = df.iloc[-1]
-        penultimo = df.iloc[-2]
-
-        return ultimo['high'] > penultimo['high'] and ultimo['low'] > penultimo['low']
+        if df["close"].iloc[-1] > df["close"].iloc[-2] > df["close"].iloc[-3]:
+            return "compra"
+        elif df["close"].iloc[-1] < df["close"].iloc[-2] < df["close"].iloc[-3]:
+            return "venda"
+        else:
+            return "indefinido"
     except Exception as e:
-        logging.error(f"especialista_price_action: {e}")
-        return False
+        logging.error(f"especialista_price_action: {str(e)}")
+        return "indefinido"
