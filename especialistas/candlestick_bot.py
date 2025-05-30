@@ -1,27 +1,21 @@
-def analisar_sinal(candles):
-    if len(candles) < 2:
-        return False
+def detectar_padrao(df):
+    if len(df) < 3:
+        return 'hold'
 
-    c1 = candles[-2]
-    c2 = candles[-1]
+    c1 = df.iloc[-3]
+    c2 = df.iloc[-2]
+    c3 = df.iloc[-1]
 
-    # Engolfo de alta
-    if c1['close'] < c1['open'] and c2['close'] > c2['open'] and c2['open'] < c1['close'] and c2['close'] > c1['open']:
-        return "compra"
+    # Exemplo de martelo invertido
+    if c3['close'] > c3['open'] and c3['low'] < c2['low'] and c3['high'] > c2['high']:
+        return 'buy'
+    elif c3['close'] < c3['open'] and c3['high'] > c2['high'] and c3['low'] < c2['low']:
+        return 'sell'
+    else:
+        return 'hold'
 
-    # Engolfo de baixa
-    if c1['close'] > c1['open'] and c2['close'] < c2['open'] and c2['open'] > c1['close'] and c2['close'] < c1['open']:
-        return "venda"
-
-    # Martelo (hammer)
-    corpo = abs(c2['close'] - c2['open'])
-    sombra_inferior = c2['open'] - c2['low'] if c2['open'] > c2['close'] else c2['close'] - c2['low']
-    if corpo > 0 and sombra_inferior > 2 * corpo and c2['high'] - max(c2['close'], c2['open']) < corpo:
-        return "compra"
-
-    # Estrela cadente
-    sombra_superior = c2['high'] - max(c2['close'], c2['open'])
-    if corpo > 0 and sombra_superior > 2 * corpo and min(c2['close'], c2['open']) - c2['low'] < corpo:
-        return "venda"
-
-    return False
+def analisar(df):
+    try:
+        return detectar_padrao(df)
+    except:
+        return 'hold'

@@ -1,19 +1,19 @@
-def analisar_sinal(candles):
-    """
-    Analisa médias móveis simples de 9 e 21 períodos para detectar cruzamentos de tendência.
-    Retorna "compra", "venda" ou None.
-    """
-    if len(candles) < 21:
-        return None
+import pandas as pd
 
-    closes = [c['close'] for c in candles]
+def analisar_sinal(df):
+    try:
+        df = pd.DataFrame(df)
+        df['close'] = pd.to_numeric(df['close'], errors='coerce')
 
-    sma_9 = sum(closes[-9:]) / 9
-    sma_21 = sum(closes[-21:]) / 21
+        df['EMA9'] = df['close'].ewm(span=9, adjust=False).mean()
+        df['EMA21'] = df['close'].ewm(span=21, adjust=False).mean()
 
-    if sma_9 > sma_21:
-        return "compra"
-    elif sma_9 < sma_21:
-        return "venda"
-    else:
+        if df['EMA9'].iloc[-2] < df['EMA21'].iloc[-2] and df['EMA9'].iloc[-1] > df['EMA21'].iloc[-1]:
+            return 'compra'
+        elif df['EMA9'].iloc[-2] > df['EMA21'].iloc[-2] and df['EMA9'].iloc[-1] < df['EMA21'].iloc[-1]:
+            return 'venda'
+        else:
+            return None
+    except Exception as e:
+        print(f"[ERRO] especialista_media_movel: {e}")
         return None

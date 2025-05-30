@@ -1,23 +1,30 @@
 import pandas as pd
 
-def analisar_sinal(candles):
-    df = pd.DataFrame(candles)
-    df.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
-    df['close'] = pd.to_numeric(df['close'])
-
+def rsi_strategy(df):
+    window = 14
     delta = df['close'].diff()
-    gain = delta.clip(lower=0)
-    loss = -delta.clip(upper=0)
+    gain = delta.where(delta > 0, 0.0)
+    loss = -delta.where(delta < 0, 0.0)
 
-    avg_gain = gain.rolling(window=14).mean()
-    avg_loss = loss.rolling(window=14).mean()
+    avg_gain = gain.rolling(window=window, min_periods=window).mean()
+    avg_loss = loss.rolling(window=window, min_periods=window).mean()
 
     rs = avg_gain / avg_loss
     rsi = 100 - (100 / (1 + rs))
 
-    if rsi.iloc[-1] < 30:
-        return "compra"
-    elif rsi.iloc[-1] > 70:
-        return "venda"
+    last_rsi = rsi.iloc[-1]
+
+    if last_rsi < 30:
+        return 'buy'
+    elif last_rsi > 70:
+        return 'sell'
     else:
-        return False
+        return 'hold'
+
+def analisar(df):
+    try:
+        if len(df) < 15:
+            return 'hold'
+        return rsi_strategy(df)
+    except:
+        return 'hold'

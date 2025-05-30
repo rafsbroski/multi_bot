@@ -1,29 +1,20 @@
-# especialistas/price_action_bot.py
+import pandas as pd
 
-def analisar_sinal(candles):
-    """
-    Analisa padrões de candlestick simples (engolfo e corpo mínimo)
-    para gerar sinais de compra ("compra"), venda ("venda") ou None.
-    """
-    if len(candles) < 2:
+def analisar_sinal(df):
+    try:
+        df = pd.DataFrame(df)
+        df['close'] = pd.to_numeric(df['close'], errors='coerce')
+        df['open'] = pd.to_numeric(df['open'], errors='coerce')
+
+        candle_anterior = df.iloc[-2]
+        candle_atual = df.iloc[-1]
+
+        if candle_anterior['close'] < candle_anterior['open'] and candle_atual['close'] > candle_atual['open'] and candle_atual['close'] > candle_anterior['open']:
+            return 'compra'
+        elif candle_anterior['close'] > candle_anterior['open'] and candle_atual['close'] < candle_atual['open'] and candle_atual['close'] < candle_anterior['open']:
+            return 'venda'
+        else:
+            return None
+    except Exception as e:
+        print(f"[ERRO] especialista_price_action: {e}")
         return None
-
-    c1 = candles[-2]
-    c2 = candles[-1]
-
-    abertura_1, fechamento_1 = c1['open'], c1['close']
-    abertura_2, fechamento_2 = c2['open'], c2['close']
-
-    corpo_1 = abs(fechamento_1 - abertura_1)
-    corpo_2 = abs(fechamento_2 - abertura_2)
-
-    # Engolfo de alta
-    if fechamento_1 < abertura_1 and fechamento_2 > abertura_2 and abertura_2 < fechamento_1 and fechamento_2 > abertura_1:
-        return "compra"
-
-    # Engolfo de baixa
-    if fechamento_1 > abertura_1 and fechamento_2 < abertura_2 and abertura_2 > fechamento_1 and fechamento_2 < abertura_1:
-        return "venda"
-
-    # Caso nenhum padrão seja detectado
-    return None
