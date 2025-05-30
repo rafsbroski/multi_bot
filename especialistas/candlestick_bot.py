@@ -1,21 +1,35 @@
-def detectar_padrao(df):
-    if len(df) < 3:
-        return 'hold'
+import pandas as pd
+import logging
 
-    c1 = df.iloc[-3]
-    c2 = df.iloc[-2]
-    c3 = df.iloc[-1]
-
-    # Exemplo de martelo invertido
-    if c3['close'] > c3['open'] and c3['low'] < c2['low'] and c3['high'] > c2['high']:
-        return 'buy'
-    elif c3['close'] < c3['open'] and c3['high'] > c2['high'] and c3['low'] < c2['low']:
-        return 'sell'
-    else:
-        return 'hold'
-
-def analisar(df):
+def analisar_sinal(df):
     try:
-        return detectar_padrao(df)
-    except:
-        return 'hold'
+        df = pd.DataFrame(df)
+        df['close'] = pd.to_numeric(df['close'], errors='coerce')
+        df.dropna(inplace=True)
+
+        df['body'] = df['close'] - df['open']
+        df['range'] = df['high'] - df['low']
+        df['upper_wick'] = df['high'] - df[['close', 'open']].max(axis=1)
+        df['lower_wick'] = df[['close', 'open']].min(axis=1) - df['low']
+
+        ultimo = df.iloc[-1]
+
+        if (
+            ultimo['body'] > 0 and
+            ultimo['body'] > ultimo['upper_wick'] and
+            ultimo['lower_wick'] > ultimo['body']
+        ):
+            return 'compra'
+
+        if (
+            ultimo['body'] < 0 and
+            abs(ultimo['body']) > ultimo['lower_wick'] and
+            ultimo['upper_wick'] > abs(ultimo['body'])
+        ):
+            return 'venda'
+
+        return None
+
+    except Exception as e:
+        logging.error(f"[ERRO] especialista_candle: {e}")
+        return None
