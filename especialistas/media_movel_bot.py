@@ -1,14 +1,17 @@
 import pandas as pd
 import logging
 
-def analisar_sinal(df):
+def analisar_sinal(candles):
     try:
-        df = pd.DataFrame(df)
-        if df.empty or 'close' not in df.columns:
+        df = pd.DataFrame(candles)
+        if df.empty or df.shape[0] < 21:
             return False
 
-        df['MM20'] = df['close'].rolling(window=20).mean()
-        return df['close'].iloc[-1] > df['MM20'].iloc[-1]
+        df['close'] = pd.to_numeric(df['close'], errors='coerce')
+        mm_curta = df['close'].rolling(window=9).mean()
+        mm_longa = df['close'].rolling(window=21).mean()
+
+        return mm_curta.iloc[-1] > mm_longa.iloc[-1] and mm_curta.iloc[-2] < mm_longa.iloc[-2]
     except Exception as e:
         logging.error(f"especialista_media_movel: {e}")
         return False

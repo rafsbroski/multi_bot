@@ -1,19 +1,17 @@
 import pandas as pd
 import logging
 
-def analisar_sinal(df, periodo=14):
+def analisar_sinal(candles):
     try:
-        df = pd.DataFrame(df)
-        if df.empty or 'close' not in df.columns:
+        df = pd.DataFrame(candles)
+        if df.empty or df.shape[0] < 15:
             return False
 
+        df['close'] = pd.to_numeric(df['close'], errors='coerce')
         delta = df['close'].diff()
-        ganho = delta.clip(lower=0)
-        perda = -delta.clip(upper=0)
-
-        media_ganho = ganho.rolling(window=periodo).mean()
-        media_perda = perda.rolling(window=periodo).mean()
-        rs = media_ganho / media_perda
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / loss
         rsi = 100 - (100 / (1 + rs))
 
         return rsi.iloc[-1] < 30
