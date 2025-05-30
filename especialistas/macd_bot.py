@@ -3,22 +3,21 @@ import logging
 
 def analisar_sinal(candles):
     try:
-        if not isinstance(candles, list) or not candles:
-            raise ValueError("Candles: lista vazia ou inválida.")
+        if not isinstance(candles, list) or len(candles) < 50:
+            raise ValueError("Estrutura de candles inválida ou insuficiente.")
 
-        df = pd.DataFrame(candles)
-        if df.empty or 'close' not in df.columns:
-            raise ValueError("DataFrame vazio ou sem coluna 'close'.")
+        df = pd.DataFrame(candles, columns=["timestamp", "open", "high", "low", "close", "volume"])
 
-        df['EMA12'] = df['close'].ewm(span=12, adjust=False).mean()
-        df['EMA26'] = df['close'].ewm(span=26, adjust=False).mean()
-        df['MACD'] = df['EMA12'] - df['EMA26']
-        df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+        df["close"] = pd.to_numeric(df["close"], errors="coerce")
+        df["ema12"] = df["close"].ewm(span=12, adjust=False).mean()
+        df["ema26"] = df["close"].ewm(span=26, adjust=False).mean()
+        df["macd"] = df["ema12"] - df["ema26"]
+        df["signal"] = df["macd"].ewm(span=9, adjust=False).mean()
 
-        if df['MACD'].iloc[-1] > df['Signal'].iloc[-1] and df['MACD'].iloc[-2] <= df['Signal'].iloc[-2]:
-            return 'compra'
-        elif df['MACD'].iloc[-1] < df['Signal'].iloc[-1] and df['MACD'].iloc[-2] >= df['Signal'].iloc[-2]:
-            return 'venda'
+        if df["macd"].iloc[-1] > df["signal"].iloc[-1] and df["macd"].iloc[-2] <= df["signal"].iloc[-2]:
+            return "compra"
+        elif df["macd"].iloc[-1] < df["signal"].iloc[-1] and df["macd"].iloc[-2] >= df["signal"].iloc[-2]:
+            return "venda"
         else:
             return None
 

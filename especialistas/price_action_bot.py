@@ -3,22 +3,26 @@ import logging
 
 def analisar_sinal(candles):
     try:
-        if not isinstance(candles, list) or not candles:
-            raise ValueError("Candles: lista vazia ou inválida.")
+        if not isinstance(candles, list) or len(candles) < 5:
+            raise ValueError("Estrutura de candles inválida ou insuficiente.")
 
-        df = pd.DataFrame(candles)
-        if df.empty or not {'open', 'close', 'high', 'low'}.issubset(df.columns):
-            raise ValueError("DataFrame malformado ou colunas ausentes.")
+        df = pd.DataFrame(candles, columns=["timestamp", "open", "high", "low", "close", "volume"])
+        df["close"] = pd.to_numeric(df["close"], errors="coerce")
 
-        candle = df.iloc[-1]
-        corpo = abs(candle['close'] - candle['open'])
-        sombra_total = candle['high'] - candle['low']
+        candle_atual = df.iloc[-1]
+        candle_anterior = df.iloc[-2]
 
-        if corpo > sombra_total * 0.7:
-            if candle['close'] > candle['open']:
-                return 'compra'
-            elif candle['close'] < candle['open']:
-                return 'venda'
+        if (
+            candle_atual["close"] > candle_atual["open"] and
+            candle_anterior["close"] < candle_anterior["open"]
+        ):
+            return "compra"
+
+        elif (
+            candle_atual["close"] < candle_atual["open"] and
+            candle_anterior["close"] > candle_anterior["open"]
+        ):
+            return "venda"
 
         return None
 

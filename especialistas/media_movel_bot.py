@@ -3,19 +3,19 @@ import logging
 
 def analisar_sinal(candles):
     try:
-        if not isinstance(candles, list) or not candles:
-            raise ValueError("Candles: lista vazia ou inválida.")
+        if not isinstance(candles, list) or len(candles) < 25:
+            raise ValueError("Estrutura de candles inválida ou insuficiente.")
 
-        df = pd.DataFrame(candles)
-        if df.empty or 'close' not in df.columns:
-            raise ValueError("DataFrame vazio ou sem coluna 'close'.")
+        df = pd.DataFrame(candles, columns=["timestamp", "open", "high", "low", "close", "volume"])
+        df["close"] = pd.to_numeric(df["close"], errors="coerce")
 
-        df['MA20'] = df['close'].rolling(window=20).mean()
+        df["ma9"] = df["close"].rolling(window=9).mean()
+        df["ma21"] = df["close"].rolling(window=21).mean()
 
-        if df['close'].iloc[-1] > df['MA20'].iloc[-1] and df['close'].iloc[-2] <= df['MA20'].iloc[-2]:
-            return 'compra'
-        elif df['close'].iloc[-1] < df['MA20'].iloc[-1] and df['close'].iloc[-2] >= df['MA20'].iloc[-2]:
-            return 'venda'
+        if df["ma9"].iloc[-1] > df["ma21"].iloc[-1] and df["ma9"].iloc[-2] <= df["ma21"].iloc[-2]:
+            return "compra"
+        elif df["ma9"].iloc[-1] < df["ma21"].iloc[-1] and df["ma9"].iloc[-2] >= df["ma21"].iloc[-2]:
+            return "venda"
         else:
             return None
 
