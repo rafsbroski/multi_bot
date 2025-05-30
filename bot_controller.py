@@ -1,49 +1,57 @@
-import time
 from especialistas import (
-    especialista_moving_average,
-    especialista_volume,
-    especialista_rsi,
+    especialista_candle,
     especialista_macd,
+    especialista_rsi,
+    especialista_moving_average,
     especialista_price_action
 )
+
 from trading import executar_ordem
-from telegram_alerts import enviar_alerta_telegram
+from telegram_alerts import notificar_telegram as enviar_mensagem
 
-PARES = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
-INTERVALO_ENTRE_ANALISES = 180  # segundos (3 minutos)
-CONSENSO_MINIMO = 4
+CONSENSO_MINIMO = 4  # Número mínimo de especialistas que devem concordar
 
-def obter_sinais(par):
-    sinais = [
-        especialista_moving_average.analisar(par),
-        especialista_volume.analisar(par),
-        especialista_rsi.analisar(par),
-        especialista_macd.analisar(par),
-        especialista_price_action.analisar(par)
-    ]
-    return sinais
+def obter_sinal_consenso(par):
+    sinais = []
 
-def analisar_consenso(sinais):
-    direcoes = [sinal for sinal in sinais if sinal in ["buy", "sell"]]
-    if not direcoes:
+    try:
+        sinais.append(especialista_candle(par))
+    except Exception as e:
+        print(f"[ERRO] especialista_candle: {e}")
+
+    try:
+        sinais.append(especialista_macd(par))
+    except Exception as e:
+        print(f"[ERRO] especialista_macd: {e}")
+
+    try:
+        sinais.append(especialista_rsi(par))
+    except Exception as e:
+        print(f"[ERRO] especialista_rsi: {e}")
+
+    try:
+        sinais.append(especialista_moving_average(par))
+    except Exception as e:
+        print(f"[ERRO] especialista_moving_average: {e}")
+
+    try:
+        sinais.append(especialista_price_action(par))
+    except Exception as e:
+        print(f"[ERRO] especialista_price_action: {e}")
+
+    # Contagem de sinais
+    if sinais.count("long") >= CONSENSO_MINIMO:
+        return "long"
+    elif sinais.count("short") >= CONSENSO_MINIMO:
+        return "short"
+    else:
         return None
 
-    direcao_mais_comum = max(set(direcoes), key=direcoes.count)
-    if direcoes.count(direcao_mais_comum) >= CONSENSO_MINIMO:
-        return direcao_mais_comum
-    return None
-
-def iniciar_bot():
-    while True:
-        for par in PARES:
-            sinais = obter_sinais(par)
-            direcao = analisar_consenso(sinais)
-
-            if direcao:
-                mensagem = f"🧠 Consenso de {CONSENSO_MINIMO}+ especialistas: {direcao.upper()} em {par}"
-                enviar_alerta_telegram(mensagem)
-                executar_ordem(par, direcao)
-            else:
-                print(f"[{par}] Sem consenso suficiente. Nenhuma ordem executada.")
-
-        time.sleep(INTERVALO_ENTRE_ANALISES)
+def executar_ordem_com_consenso(par):
+    direcao = obter_sinal_consenso(par)
+    if direcao:
+        mensagem = f"[CONSENSO] {par}: Entrada detectada ({direcao.upper()}) por {CONSENSO_MINIMO}+ especialistas."
+        enviar_mensagem(mensagem)
+        executar_ordem(par, direcao)
+    else:
+        print(f"[INFO] Sem consenso suficiente para {par}. Nenhuma ordem executada.")
