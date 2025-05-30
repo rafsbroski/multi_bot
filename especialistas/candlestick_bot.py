@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 
-def analisar_sinal(candles):
+def analisar_candle(candles):
     try:
         if not isinstance(candles, list) or len(candles) == 0:
             raise ValueError("Candles: lista vazia ou inválida.")

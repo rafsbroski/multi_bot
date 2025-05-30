@@ -1,7 +1,7 @@
 # especialistas/macd_bot.py
 import logging
 
-def analisar_sinal(candles):
+def analisar_macd(candles, par):
     """
     Sinaliza 'long' no cruzamento de alta do MACD (12−26) com sua signal line (9),
     'short' no cruzamento de baixa, ou False em caso contrário ou erro.

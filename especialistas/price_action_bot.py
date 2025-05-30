@@ -1,7 +1,7 @@
 # especialistas/price_action_bot.py
 import logging
 
-def avaliar_price_action(candles):
+def analisar_price_action(candles):
     """
     Especialista de padrão de candle:
     Engolfos, martelo e estrela cadente.

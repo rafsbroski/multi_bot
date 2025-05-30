@@ -1,7 +1,7 @@
 # especialistas/media_movel_bot.py
 import logging
 
-def avaliar_media_movel(candles):
+def analisar_media_movel(candles):
     """
     Especialista de cruzamento de EMAs (7 vs 15).
     Retorna 'long' se EMA7 > EMA15, 'short' se EMA7 < EMA15, ou False.

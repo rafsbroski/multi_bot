@@ -1,7 +1,7 @@
 # especialistas/rsi_bot.py
 import logging
 
-def analisar_sinal(candles):
+def analisar_rsi(candles):
     """
     RSI curto (10) sobre closes dos últimos candles:
     retorna 'long' se RSI < 36, 'short' se RSI > 64, ou False.
