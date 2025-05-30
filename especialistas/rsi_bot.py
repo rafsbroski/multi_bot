@@ -1,30 +1,22 @@
 import pandas as pd
 import logging
 
-def analisar_sinal(df):
+def analisar_sinal(df, periodo=14):
     try:
         df = pd.DataFrame(df)
-        df['close'] = pd.to_numeric(df['close'], errors='coerce')
-        df.dropna(inplace=True)
+        if df.empty or 'close' not in df.columns:
+            return False
 
         delta = df['close'].diff()
-        gain = delta.where(delta > 0, 0)
-        loss = -delta.where(delta < 0, 0)
+        ganho = delta.clip(lower=0)
+        perda = -delta.clip(upper=0)
 
-        avg_gain = gain.rolling(window=14).mean()
-        avg_loss = loss.rolling(window=14).mean()
-
-        rs = avg_gain / avg_loss
+        media_ganho = ganho.rolling(window=periodo).mean()
+        media_perda = perda.rolling(window=periodo).mean()
+        rs = media_ganho / media_perda
         rsi = 100 - (100 / (1 + rs))
 
-        if rsi.iloc[-1] < 30:
-            return 'compra'
-
-        if rsi.iloc[-1] > 70:
-            return 'venda'
-
-        return None
-
+        return rsi.iloc[-1] < 30
     except Exception as e:
-        logging.error(f"[ERRO] especialista_rsi: {e}")
-        return None
+        logging.error(f"especialista_rsi: {e}")
+        return False
