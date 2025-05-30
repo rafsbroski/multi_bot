@@ -1,22 +1,40 @@
-# price_action_bot.py
-
 import logging
 
 def avaliar_price_action(candles):
+    """
+    Sinal de price action:
+    - Engolfo de alta/baixa
+    - Martelo / Estrela cadente
+    Retorna 'long', 'short' ou None. Proteção contra entradas inválidas.
+    """
     try:
-        if len(candles) < 2:
-            raise ValueError("candles insuficientes")
+        # Verifica lista e tamanho mínimo
+        if not isinstance(candles, list) or len(candles) < 2:
+            raise ValueError("Candles insuficientes")
         c1 = candles[-2]
         c2 = candles[-1]
-        o1, h1, l1, c1c = map(float, (c1["open"], c1["high"], c1["low"], c1["close"]))
-        o2, h2, l2, c2c = map(float, (c2["open"], c2["high"], c2["low"], c2["close"]))
-        # engolfo
+        o1, c1c = float(c1["open"]), float(c1["close"])
+        o2, c2c = float(c2["open"]), float(c2["close"])
+        low2, high2 = float(c2["low"]), float(c2["high"])
+
+        # Engolfo de alta
         if c1c < o1 and c2c > o2 and o2 < c1c and c2c > o1:
-            return "buy"
+            return "long"
+        # Engolfo de baixa
         if c1c > o1 and c2c < o2 and o2 > c1c and c2c < o1:
-            return "sell"
-        # fallback por cor do candle
-        return "buy" if c2c > o2 else "sell" if c2c < o2 else None
-    except Exception as e:
-        logging.error(f"especialista_price_action: Estrutura de candles inválida ou insuficiente. {e}")
+            return "short"
+
+        corpo = abs(c2c - o2)
+        # Martelo
+        sombra_inf = (o2 - low2) if o2 > c2c else (c2c - low2)
+        if corpo > 0 and sombra_inf > 2 * corpo and (high2 - max(c2c, o2)) < corpo:
+            return "long"
+        # Estrela cadente
+        sombra_sup = high2 - max(c2c, o2)
+        if corpo > 0 and sombra_sup > 2 * corpo and (min(c2c, o2) - low2) < corpo:
+            return "short"
+
+        return None
+    except Exception:
+        logging.error("especialista_price_action: Estrutura de candles inválida ou insuficiente.")
         return None

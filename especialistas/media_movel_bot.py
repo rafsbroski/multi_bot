@@ -1,23 +1,31 @@
-# media_movel_bot.py
-
 import logging
 
-def analisar_media_movel(candles):
+def avaliar_media_movel(candles):
+    """
+    Retorna 'long' se EMA7 > EMA15, 'short' se EMA7 < EMA15, ou None caso contrário.
+    Proteção contra entradas inválidas ou candles insuficientes.
+    """
     try:
-        # espera uma lista de dicts com chave "close"
+        # Verifica lista e tamanho mínimo
+        if not isinstance(candles, list) or len(candles) < 15:
+            raise ValueError("Candles insuficientes")
+        # Extrai closes
         closes = [float(c["close"]) for c in candles]
-        if len(closes) < 15:
-            raise ValueError("candles insuficientes")
-        # EMA de 7 e 15
-        def ema(values, period):
+        # Função para calcular EMA
+        def _ema(prices, period):
             k = 2 / (period + 1)
-            ema_val = values[0]
-            for v in values[1:]:
-                ema_val = v * k + ema_val * (1 - k)
-            return ema_val
-        ema7  = ema(closes[-7:], 7)
-        ema15 = ema(closes[-15:], 15)
-        return "buy" if ema7 > ema15 else "sell" if ema7 < ema15 else None
-    except Exception as e:
-        logging.error(f"especialista_media_movel: Estrutura de candles inválida ou insuficiente. {e}")
+            ema = prices[0]
+            for price in prices[1:]:
+                ema = price * k + ema * (1 - k)
+            return ema
+        ema7 = _ema(closes[-7:], 7)
+        ema15 = _ema(closes[-15:], 15)
+        if ema7 > ema15:
+            return "long"
+        elif ema7 < ema15:
+            return "short"
+        else:
+            return None
+    except Exception:
+        logging.error("especialista_media_movel: Estrutura de candles inválida ou insuficiente.")
         return None
