@@ -29,10 +29,10 @@ def abrir_posicao(cliente, par, direcao, tamanho):
 
         params = {
             "symbol": par.replace("/", "_"),
-            "price": "",  # Preço de mercado
+            "price": "",
             "vol": str(tamanho),
             "side": lado,
-            "type": 1,  # Ordem a mercado
+            "type": 1,
             "open_type": "isolated",
             "position_id": 0,
             "leverage": 50,
@@ -51,15 +51,13 @@ def abrir_posicao(cliente, par, direcao, tamanho):
         return False
 
 def fechar_posicoes_anteriores(cliente, par):
-    # Esta função pode ser desenvolvida no futuro se quisermos encerrar posições manualmente
-    pass
+    pass  # Placeholder
 
 def verificar_posicoes_ativas(cliente, par):
     try:
-        # Aqui poderia-se ligar ao endpoint de posições
-        return False  # Supondo que ainda não temos nada aberto
+        return False
     except Exception:
-        return True  # Por segurança, assumimos que há
+        return True
 
 def fetch_candles(par, interval="1m", limit=100):
     try:
@@ -79,4 +77,25 @@ def fetch_candles(par, interval="1m", limit=100):
             print(f"[ERRO] MEXC respondeu com status {response.status_code}")
             return []
 
-        data
+        data = response.json()
+
+        candles = []
+        for item in data.get("data", []):
+            try:
+                candles.append({
+                    "timestamp": int(item[0]),
+                    "open": float(item[1]),
+                    "high": float(item[2]),
+                    "low": float(item[3]),
+                    "close": float(item[4]),
+                    "volume": float(item[5])
+                })
+            except Exception as e:
+                print(f"[ERRO] Conversão de candle falhou: {e}")
+                continue
+
+        return candles
+
+    except Exception as e:
+        print(f"[ERRO] Falha ao buscar candles da MEXC: {e}")
+        return []
