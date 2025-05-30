@@ -1,24 +1,23 @@
-import pandas as pd
+# media_movel_bot.py
+
 import logging
 
-def analisar_sinal(candles):
+def analisar_media_movel(candles):
     try:
-        if not isinstance(candles, list) or len(candles) < 25:
-            raise ValueError("Estrutura de candles inválida ou insuficiente.")
-
-        df = pd.DataFrame(candles, columns=["timestamp", "open", "high", "low", "close", "volume"])
-        df["close"] = pd.to_numeric(df["close"], errors="coerce")
-
-        df["ma9"] = df["close"].rolling(window=9).mean()
-        df["ma21"] = df["close"].rolling(window=21).mean()
-
-        if df["ma9"].iloc[-1] > df["ma21"].iloc[-1] and df["ma9"].iloc[-2] <= df["ma21"].iloc[-2]:
-            return "compra"
-        elif df["ma9"].iloc[-1] < df["ma21"].iloc[-1] and df["ma9"].iloc[-2] >= df["ma21"].iloc[-2]:
-            return "venda"
-        else:
-            return None
-
+        # espera uma lista de dicts com chave "close"
+        closes = [float(c["close"]) for c in candles]
+        if len(closes) < 15:
+            raise ValueError("candles insuficientes")
+        # EMA de 7 e 15
+        def ema(values, period):
+            k = 2 / (period + 1)
+            ema_val = values[0]
+            for v in values[1:]:
+                ema_val = v * k + ema_val * (1 - k)
+            return ema_val
+        ema7  = ema(closes[-7:], 7)
+        ema15 = ema(closes[-15:], 15)
+        return "buy" if ema7 > ema15 else "sell" if ema7 < ema15 else None
     except Exception as e:
-        logging.error(f"especialista_media_movel: {e}")
+        logging.error(f"especialista_media_movel: Estrutura de candles inválida ou insuficiente. {e}")
         return None

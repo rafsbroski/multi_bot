@@ -1,26 +1,30 @@
-import pandas as pd
+# macd_bot.py
+
 import logging
 
-def analisar_sinal(candles):
+def analisar_macd(candles):
     try:
-        if not isinstance(candles, list) or len(candles) < 50:
-            raise ValueError("Estrutura de candles inválida ou insuficiente.")
-
-        df = pd.DataFrame(candles, columns=["timestamp", "open", "high", "low", "close", "volume"])
-
-        df["close"] = pd.to_numeric(df["close"], errors="coerce")
-        df["ema12"] = df["close"].ewm(span=12, adjust=False).mean()
-        df["ema26"] = df["close"].ewm(span=26, adjust=False).mean()
-        df["macd"] = df["ema12"] - df["ema26"]
-        df["signal"] = df["macd"].ewm(span=9, adjust=False).mean()
-
-        if df["macd"].iloc[-1] > df["signal"].iloc[-1] and df["macd"].iloc[-2] <= df["signal"].iloc[-2]:
-            return "compra"
-        elif df["macd"].iloc[-1] < df["signal"].iloc[-1] and df["macd"].iloc[-2] >= df["signal"].iloc[-2]:
-            return "venda"
-        else:
-            return None
-
+        closes = [float(c["close"]) for c in candles]
+        if len(closes) < 26:
+            raise ValueError("candles insuficientes")
+        # função EMA genérica
+        def ema(vals, per):
+            k = 2 / (per + 1)
+            ema_list = [sum(vals[:per]) / per]
+            for price in vals[per:]:
+                ema_list.append(price * k + ema_list[-1] * (1 - k))
+            return ema_list
+        ema12 = ema(closes, 12)
+        ema26 = ema(closes, 26)
+        # alinhamento
+        minlen = min(len(ema12), len(ema26))
+        macd_line = [ema12[-i] - ema26[-i] for i in range(1, minlen+1)]
+        signal = ema(macd_line, 9)
+        if macd_line[-2] < signal[-2] < macd_line[-1] > signal[-1]:
+            return "buy"
+        if macd_line[-2] > signal[-2] > macd_line[-1] < signal[-1]:
+            return "sell"
+        return None
     except Exception as e:
-        logging.error(f"especialista_macd: {e}")
+        logging.error(f"especialista_macd: Estrutura de candles inválida ou insuficiente. {e}")
         return None
