@@ -63,7 +63,7 @@ def fetch_candles(par, interval="1m", limit=100):
     try:
         endpoint = "/api/v1/market/kline"
         url = f"{BASE_URL}{endpoint}"
-        symbol = par.replace("/", "_")
+        symbol = par.replace("/", "")
 
         params = {
             "symbol": symbol,
