@@ -1,40 +1,37 @@
 import logging
 
-def avaliar_price_action(candles):
+def analisar_sinal(candles):
     """
-    Sinal de price action:
-    - Engolfo de alta/baixa
-    - Martelo / Estrela cadente
-    Retorna 'long', 'short' ou None. Proteção contra entradas inválidas.
+    Engolfo de alta/baixa simples:
+      - "long" para Bullish Engulfing
+      - "short" para Bearish Engulfing
+      - False caso contrário ou erro
     """
     try:
-        # Verifica lista e tamanho mínimo
+        # precisa de pelo menos 2 candles
         if not isinstance(candles, list) or len(candles) < 2:
-            raise ValueError("Candles insuficientes")
-        c1 = candles[-2]
-        c2 = candles[-1]
-        o1, c1c = float(c1["open"]), float(c1["close"])
-        o2, c2c = float(c2["open"]), float(c2["close"])
-        low2, high2 = float(c2["low"]), float(c2["high"])
-
-        # Engolfo de alta
-        if c1c < o1 and c2c > o2 and o2 < c1c and c2c > o1:
+            raise ValueError("Estrutura de candles inválida ou insuficiente.")
+        # pega os dois últimos
+        last = candles[-1]
+        prev = candles[-2]
+        # normaliza open/close/low/high
+        def norm(c, key):
+            if isinstance(c, dict) and key in c:
+                return float(c[key])
+            elif isinstance(c, (list, tuple)):
+                idx = {"open":1,"high":2,"low":3,"close":4}[key]
+                return float(c[idx])
+            else:
+                raise ValueError("Formato de candle inválido.")
+        o1, c1 = norm(prev,"open"), norm(prev,"close")
+        o2, c2 = norm(last,"open"), norm(last,"close")
+        # Bullish Engulfing
+        if c1 < o1 and c2 > o2 and o2 < c1 and c2 > o1:
             return "long"
-        # Engolfo de baixa
-        if c1c > o1 and c2c < o2 and o2 > c1c and c2c < o1:
+        # Bearish Engulfing
+        if c1 > o1 and c2 < o2 and o2 > c1 and c2 < o1:
             return "short"
-
-        corpo = abs(c2c - o2)
-        # Martelo
-        sombra_inf = (o2 - low2) if o2 > c2c else (c2c - low2)
-        if corpo > 0 and sombra_inf > 2 * corpo and (high2 - max(c2c, o2)) < corpo:
-            return "long"
-        # Estrela cadente
-        sombra_sup = high2 - max(c2c, o2)
-        if corpo > 0 and sombra_sup > 2 * corpo and (min(c2c, o2) - low2) < corpo:
-            return "short"
-
-        return None
-    except Exception:
-        logging.error("especialista_price_action: Estrutura de candles inválida ou insuficiente.")
-        return None
+        return False
+    except Exception as e:
+        logging.error(f"[especialista_price_action] {e}")
+        return False
