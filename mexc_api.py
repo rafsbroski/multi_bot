@@ -60,3 +60,36 @@ def verificar_posicoes_ativas(cliente, par):
         return False  # Supondo que ainda não temos nada aberto
     except Exception:
         return True  # Por segurança, assumimos que há
+
+def fetch_candles(par, interval="1m", limit=100):
+    try:
+        endpoint = "/api/v1/market/kline"
+        url = f"{BASE_URL}{endpoint}"
+        symbol = par.replace("/", "_")
+
+        params = {
+            "symbol": symbol,
+            "interval": interval,
+            "limit": limit
+        }
+
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        # Garante que os dados estão no formato esperado
+        candles = []
+        for item in data.get("data", []):
+            candles.append({
+                "timestamp": int(item[0]),
+                "open": float(item[1]),
+                "high": float(item[2]),
+                "low": float(item[3]),
+                "close": float(item[4]),
+                "volume": float(item[5])
+            })
+
+        return candles
+
+    except Exception as e:
+        print(f"[ERRO] Falha ao buscar candles da MEXC: {e}")
+        return []
