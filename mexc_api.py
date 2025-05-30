@@ -74,22 +74,9 @@ def fetch_candles(par, interval="1m", limit=100):
         }
 
         response = requests.get(url, params=params)
-        data = response.json()
 
-        # Garante que os dados estão no formato esperado
-        candles = []
-        for item in data.get("data", []):
-            candles.append({
-                "timestamp": int(item[0]),
-                "open": float(item[1]),
-                "high": float(item[2]),
-                "low": float(item[3]),
-                "close": float(item[4]),
-                "volume": float(item[5])
-            })
+        if response.status_code != 200:
+            print(f"[ERRO] MEXC respondeu com status {response.status_code}")
+            return []
 
-        return candles
-
-    except Exception as e:
-        print(f"[ERRO] Falha ao buscar candles da MEXC: {e}")
-        return []
+        data

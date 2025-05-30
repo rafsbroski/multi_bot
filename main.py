@@ -28,7 +28,7 @@ def main():
                 especialista_price_action
             ]:
                 try:
-                    sinal = bot_fn(candles)
+                    sinal = bot_fn(candles, par)
                 except Exception as e:
                     print(f"[ERRO] {bot_fn.__name__}: {e}")
                     sinal = None
