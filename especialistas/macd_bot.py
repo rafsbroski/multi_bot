@@ -1,22 +1,25 @@
 import pandas as pd
+import logging
 
-def macd_strategy(df):
-    short_ema = df['close'].ewm(span=12, adjust=False).mean()
-    long_ema = df['close'].ewm(span=26, adjust=False).mean()
-    macd = short_ema - long_ema
-    signal = macd.ewm(span=9, adjust=False).mean()
-
-    if macd.iloc[-1] > signal.iloc[-1] and macd.iloc[-2] <= signal.iloc[-2]:
-        return 'buy'
-    elif macd.iloc[-1] < signal.iloc[-1] and macd.iloc[-2] >= signal.iloc[-2]:
-        return 'sell'
-    else:
-        return 'hold'
-
-def analisar(df):
+def analisar_sinal(df):
     try:
-        if len(df) < 35:
-            return 'hold'
-        return macd_strategy(df)
-    except:
-        return 'hold'
+        df = pd.DataFrame(df)
+        df['close'] = pd.to_numeric(df['close'], errors='coerce')
+        df.dropna(inplace=True)
+
+        df['EMA12'] = df['close'].ewm(span=12, adjust=False).mean()
+        df['EMA26'] = df['close'].ewm(span=26, adjust=False).mean()
+        df['MACD'] = df['EMA12'] - df['EMA26']
+        df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+
+        if df['MACD'].iloc[-1] > df['Signal'].iloc[-1] and df['MACD'].iloc[-2] < df['Signal'].iloc[-2]:
+            return 'compra'
+
+        if df['MACD'].iloc[-1] < df['Signal'].iloc[-1] and df['MACD'].iloc[-2] > df['Signal'].iloc[-2]:
+            return 'venda'
+
+        return None
+
+    except Exception as e:
+        logging.error(f"[ERRO] especialista_macd: {e}")
+        return None
