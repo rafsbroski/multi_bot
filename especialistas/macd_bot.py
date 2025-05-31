@@ -4,14 +4,14 @@ def analisar_macd(candles, par):
     try:
         if not isinstance(candles, list) or len(candles) < 35:
             raise ValueError("Estrutura de candles inválida ou insuficiente.")
+
         closes = []
         for c in candles:
-            if isinstance(c, dict) and "close" in c:
-                closes.append(float(c["close"]))
-            elif isinstance(c, (list, tuple)) and len(c) > 4:
-                closes.append(float(c[4]))
-            else:
-                raise ValueError("Formato de candle inválido.")
+            if not isinstance(c, dict):
+                raise ValueError("Candle não é um dicionário.")
+            if not all(k in c for k in ["open", "high", "low", "close", "volume", "timestamp"]):
+                raise ValueError("Candle com campos incompletos.")
+            closes.append(float(c["close"]))
 
         def ema(vals, period):
             k = 2 / (period + 1)
