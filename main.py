@@ -4,7 +4,7 @@ from especialistas import (
     especialista_candle,
     especialista_macd,
     especialista_rsi,
-    especialista_moving_average,
+    especialista_media_movel,
     especialista_price_action,
 )
 from trading import executar_ordem
