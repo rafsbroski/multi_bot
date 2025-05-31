@@ -59,7 +59,7 @@ def verificar_posicoes_ativas(cliente, par):
     except Exception:
         return True
 
-def fetch_candles(par, interval="1m", limit=100):
+def fetch_candles(par, interval="1m", limit=50):
     try:
         endpoint = "/api/v3/klines"
         url = f"{BASE_URL}{endpoint}"
@@ -77,7 +77,15 @@ def fetch_candles(par, interval="1m", limit=100):
             print(f"[ERRO] MEXC respondeu com status {response.status_code}")
             return []
 
-        data = response.json()
+        try:
+            data = response.json()
+        except Exception as e:
+            print(f"[ERRO] JSON inválido da MEXC: {e}")
+            return []
+
+        if not isinstance(data, list) or len(data) < 30:
+            print(f"[ERRO] Lista de candles insuficiente. Recebidos: {len(data)}")
+            return []
 
         candles = []
         for item in data:
