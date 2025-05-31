@@ -7,21 +7,23 @@ def analisar_macd(candles, par):
             logging.error(f"[especialista_macd] Lista de candles vazia para {par}.")
             return None
 
-        logging.debug(f"[especialista_macd] Candles recebidos para {par}: {candles[:3]}")  # debug real
+        logging.debug(f"[especialista_macd] Candles recebidos para {par}: {candles[:3]}")
 
-        candles_validos = [c for c in candles if isinstance(c, (list, tuple)) and len(c) >= 6]
-        if len(candles_validos) < 30:
-            logging.error(f"[especialista_macd] Candles com dados incompletos para {par}. Tamanho: {len(candles_validos)}")
+        if not isinstance(candles[0], dict):
+            logging.error(f"[especialista_macd] Formato inválido dos candles para {par}. Esperado dicionário.")
             return None
 
-        df = pd.DataFrame(candles_validos[:100], columns=[
-            'timestamp', 'open', 'high', 'low', 'close', 'volume'
-        ])
+        df = pd.DataFrame(candles)
 
-        df[['open', 'high', 'low', 'close', 'volume']] = df[['open', 'high', 'low', 'close', 'volume']].apply(pd.to_numeric, errors='coerce')
+        if not {'open', 'high', 'low', 'close', 'volume'}.issubset(df.columns):
+            logging.error(f"[especialista_macd] Campos essenciais em falta nos candles para {par}.")
+            return None
 
-        if df.isnull().values.any():
-            logging.error(f"[especialista_macd] Valores inválidos no DataFrame para {par}.")
+        df = df[['open', 'high', 'low', 'close', 'volume']].copy()
+        df = df.apply(pd.to_numeric, errors='coerce')
+
+        if df.isnull().values.any() or len(df) < 30:
+            logging.error(f"[especialista_macd] DataFrame inválido ou com menos de 30 candles para {par}.")
             return None
 
         ema12 = df['close'].ewm(span=12, adjust=False).mean()
