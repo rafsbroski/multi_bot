@@ -1,6 +1,6 @@
 import logging
 
-def analisar_media(candles, par):
+def analisar_media_movel(candles, par):
     try:
         if not isinstance(candles, list) or len(candles) < 21:
             raise ValueError("Estrutura de candles inválida ou insuficiente.")
