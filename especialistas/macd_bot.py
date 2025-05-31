@@ -3,13 +3,15 @@ import logging
 
 def analisar_macd(candles, par):
     try:
-        if not candles or len(candles) < 30:
-            logging.error(f"[especialista_macd] Estrutura de candles inválida ou insuficiente para {par}.")
+        if not candles:
+            logging.error(f"[especialista_macd] Lista de candles vazia para {par}.")
             return None
+
+        logging.debug(f"[especialista_macd] Candles recebidos para {par}: {candles[:3]}")  # debug real
 
         candles_validos = [c for c in candles if isinstance(c, (list, tuple)) and len(c) >= 6]
         if len(candles_validos) < 30:
-            logging.error(f"[especialista_macd] Candles com dados incompletos para {par}.")
+            logging.error(f"[especialista_macd] Candles com dados incompletos para {par}. Tamanho: {len(candles_validos)}")
             return None
 
         df = pd.DataFrame(candles_validos[:100], columns=[

@@ -3,13 +3,15 @@ import logging
 
 def analisar_media_movel(candles, par):
     try:
-        if not candles or len(candles) < 50:
-            logging.error(f"[especialista_media_movel] Estrutura de candles inválida ou insuficiente para {par}.")
+        if not candles:
+            logging.error(f"[especialista_media_movel] Lista de candles vazia para {par}.")
             return None
+
+        logging.debug(f"[especialista_media_movel] Candles recebidos para {par}: {candles[:3]}")  # debug real
 
         candles_validos = [c for c in candles if isinstance(c, (list, tuple)) and len(c) >= 6]
         if len(candles_validos) < 50:
-            logging.error(f"[especialista_media_movel] Candles com dados incompletos para {par}.")
+            logging.error(f"[especialista_media_movel] Candles com dados incompletos para {par}. Tamanho: {len(candles_validos)}")
             return None
 
         df = pd.DataFrame(candles_validos[:100], columns=[
