@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 
-def analisar_sinal(candles):
+def analisar_candle(candles, par):
     try:
         if not candles or len(candles) < 50:
             logging.error("[especialista_media_movel] Estrutura de candles inválida ou insuficiente.")
