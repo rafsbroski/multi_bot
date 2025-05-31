@@ -61,9 +61,8 @@ def verificar_posicoes_ativas(cliente, par):
 
 def fetch_candles(par, interval="1m", limit=50):
     try:
-        endpoint = "/api/v3/klines"
-        url = f"{BASE_URL}{endpoint}"
-        symbol = par.replace("/", "")
+        url = "https://api.binance.com/api/v3/klines"
+        symbol = par.replace("/", "")  # ex: BTCUSDT
 
         params = {
             "symbol": symbol,
@@ -74,13 +73,13 @@ def fetch_candles(par, interval="1m", limit=50):
         response = requests.get(url, params=params)
 
         if response.status_code != 200:
-            print(f"[ERRO] MEXC respondeu com status {response.status_code}")
+            print(f"[ERRO] Binance respondeu com status {response.status_code}")
             return []
 
         try:
             data = response.json()
         except Exception as e:
-            print(f"[ERRO] JSON inválido da MEXC: {e}")
+            print(f"[ERRO] JSON inválido da Binance: {e}")
             return []
 
         if not isinstance(data, list) or len(data) < 30:
@@ -102,9 +101,9 @@ def fetch_candles(par, interval="1m", limit=50):
                 print(f"[ERRO] Conversão de candle falhou: {e}")
                 continue
 
-        print(f"[DEBUG] Candles recebidos para {symbol}: {candles}")
+        print(f"[DEBUG] Candles recebidos da Binance para {symbol}: {candles}")
         return candles
 
     except Exception as e:
-        print(f"[ERRO] Falha ao buscar candles da MEXC: {e}")
+        print(f"[ERRO] Falha ao buscar candles da Binance: {e}")
         return []
