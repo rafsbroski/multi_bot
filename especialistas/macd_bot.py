@@ -7,7 +7,7 @@ def analisar_macd(candles, par):
             logging.error(f"[especialista_macd] Estrutura de candles inválida ou insuficiente para {par}.")
             return None
 
-        candles_validos = [c for c in candles if isinstance(c, (list, tuple)) and len(c) >= 5]
+        candles_validos = [c for c in candles if isinstance(c, (list, tuple)) and len(c) >= 6]
         if len(candles_validos) < 30:
             logging.error(f"[especialista_macd] Candles com dados incompletos para {par}.")
             return None
@@ -15,10 +15,11 @@ def analisar_macd(candles, par):
         df = pd.DataFrame(candles_validos[:100], columns=[
             'timestamp', 'open', 'high', 'low', 'close', 'volume'
         ])
-        df['close'] = pd.to_numeric(df['close'], errors='coerce')
 
-        if df['close'].isnull().any():
-            logging.error(f"[especialista_macd] Valores inválidos na coluna 'close' para {par}.")
+        df[['open', 'high', 'low', 'close', 'volume']] = df[['open', 'high', 'low', 'close', 'volume']].apply(pd.to_numeric, errors='coerce')
+
+        if df.isnull().values.any():
+            logging.error(f"[especialista_macd] Valores inválidos no DataFrame para {par}.")
             return None
 
         ema12 = df['close'].ewm(span=12, adjust=False).mean()

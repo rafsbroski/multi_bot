@@ -7,7 +7,7 @@ def analisar_media_movel(candles, par):
             logging.error(f"[especialista_media_movel] Estrutura de candles inválida ou insuficiente para {par}.")
             return None
 
-        candles_validos = [c for c in candles if isinstance(c, (list, tuple)) and len(c) >= 5]
+        candles_validos = [c for c in candles if isinstance(c, (list, tuple)) and len(c) >= 6]
         if len(candles_validos) < 50:
             logging.error(f"[especialista_media_movel] Candles com dados incompletos para {par}.")
             return None
@@ -15,10 +15,11 @@ def analisar_media_movel(candles, par):
         df = pd.DataFrame(candles_validos[:100], columns=[
             'timestamp', 'open', 'high', 'low', 'close', 'volume'
         ])
-        df['close'] = pd.to_numeric(df['close'], errors='coerce')
 
-        if df['close'].isnull().any():
-            logging.error(f"[especialista_media_movel] Valores inválidos na coluna 'close' para {par}.")
+        df[['open', 'high', 'low', 'close', 'volume']] = df[['open', 'high', 'low', 'close', 'volume']].apply(pd.to_numeric, errors='coerce')
+
+        if df.isnull().values.any():
+            logging.error(f"[especialista_media_movel] Valores inválidos no DataFrame para {par}.")
             return None
 
         df['ma20'] = df['close'].rolling(window=20).mean()
