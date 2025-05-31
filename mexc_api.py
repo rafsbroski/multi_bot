@@ -61,9 +61,9 @@ def verificar_posicoes_ativas(cliente, par):
 
 def fetch_candles(par, interval="1m", limit=100):
     try:
-        endpoint = "/api/v3/market/kline"
+        endpoint = "/api/v1/market/kline"  # CORRIGIDO aqui
         url = f"{BASE_URL}{endpoint}"
-        symbol = par.replace("/", "")
+        symbol = par.replace("/", "_")  # CORRIGIDO: usar "_" e não ""
 
         params = {
             "symbol": symbol,
