@@ -62,7 +62,7 @@ def verificar_posicoes_ativas(cliente, par):
 def fetch_candles(par, interval="1m", limit=50):
     try:
         url = "https://api.binance.com/api/v3/klines"
-        symbol = par.replace("/", "")  # ex: BTCUSDT
+        symbol = par.replace("/", "").upper()  # ✅ Garantir maiúsculas
 
         params = {
             "symbol": symbol,
