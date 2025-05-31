@@ -2,7 +2,6 @@ import httpx
 import time
 import hmac
 import hashlib
-import json
 from config import MEXC_API_KEY, MEXC_SECRET_KEY
 
 BASE_URL = "https://api.mexc.com"
@@ -24,7 +23,6 @@ def abrir_posicao(cliente, par, direcao, tamanho):
     try:
         endpoint = "/api/v1/order"
         url = BASE_URL + endpoint
-
         lado = "BUY" if direcao == "long" else "SELL"
 
         params = {
@@ -51,7 +49,7 @@ def abrir_posicao(cliente, par, direcao, tamanho):
         return False
 
 def fechar_posicoes_anteriores(cliente, par):
-    pass  # Placeholder
+    pass  # ainda por implementar
 
 def verificar_posicoes_ativas(cliente, par):
     try:
@@ -68,12 +66,10 @@ def fetch_candles(par, interval="1min", limit=20):
         "User-Agent": "Mozilla/5.0"
     }
 
-    # 1️⃣ KUCOIN
     try:
         url = f"https://api.kucoin.com/api/v1/market/candles?type={interval}&symbol={symbol_kucoin}"
         response = httpx.get(url, timeout=10)
         data = response.json().get("data", [])
-
         if data and len(data) >= limit:
             candles = []
             for item in reversed(data[-limit:]):
@@ -87,16 +83,13 @@ def fetch_candles(par, interval="1min", limit=20):
                 })
             print(f"[KUCOIN] Candles para {par}: OK")
             return candles
-        print("[KUCOIN] Dados insuficientes.")
     except Exception as e:
         print(f"[KUCOIN] Erro: {e}")
 
-    # 2️⃣ BINANCE
     try:
         url = f"https://api.binance.com/api/v3/klines?symbol={symbol_binance.upper()}&interval=1m&limit={limit}"
         response = httpx.get(url, timeout=10)
         data = response.json()
-
         if isinstance(data, list) and len(data) >= limit:
             candles = []
             for item in data:
@@ -110,16 +103,13 @@ def fetch_candles(par, interval="1min", limit=20):
                 })
             print(f"[BINANCE] Candles para {par}: OK")
             return candles
-        print("[BINANCE] Dados insuficientes.")
     except Exception as e:
         print(f"[BINANCE] Erro: {e}")
 
-    # 3️⃣ COINGECKO
     try:
         url = f"https://api.coingecko.com/api/v3/coins/{symbol_coingecko}/market_chart?vs_currency=usd&days=1&interval=minutely"
         response = httpx.get(url, headers=headers, timeout=10)
         data = response.json().get("prices", [])
-
         if data and len(data) >= limit:
             candles = []
             for item in data[-limit:]:
@@ -133,10 +123,8 @@ def fetch_candles(par, interval="1min", limit=20):
                 })
             print(f"[COINGECKO] Candles para {par}: OK")
             return candles
-        print("[COINGECKO] Dados insuficientes.")
     except Exception as e:
         print(f"[COINGECKO] Erro: {e}")
 
-    # Fallback final
     print(f"[ERRO] Nenhuma API devolveu candles para {par}.")
     return []

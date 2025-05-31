@@ -21,11 +21,10 @@ def main():
         print(f"\n[VERIFICAÇÃO] Analisando sinal para {par}…")
         candles = fetch_candles(par, interval=CHECK_INTERVAL)
 
-        # DEBUG: imprimir os candles brutos recebidos
         print(f"[DEBUG] Candles recebidos no main para {par}: {candles}")
 
-        if not candles:
-            print(f"[ERRO] Lista de candles vazia para {par}. Especialistas não serão chamados.")
+        if not candles or len(candles) < 20:
+            print(f"[ERRO] Lista de candles vazia ou insuficiente para {par}.")
             time.sleep(CHECK_INTERVAL)
             continue
 
@@ -44,8 +43,9 @@ def main():
                 sinal = None
             sinais.append(sinal)
 
-        longs  = sum(1 for s in sinais if str(s).lower() in ("long", "buy", "compra"))
+        longs = sum(1 for s in sinais if str(s).lower() in ("long", "buy", "compra"))
         shorts = sum(1 for s in sinais if str(s).lower() in ("short", "sell", "venda"))
+
         if longs >= 4 and shorts == 0:
             direcao = "long"
         elif shorts >= 4 and longs == 0:
