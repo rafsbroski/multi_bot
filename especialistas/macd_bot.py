@@ -22,15 +22,15 @@ def analisar_macd(candles, par):
 
         ema12 = ema(closes, 12)
         ema26 = ema(closes, 26)
-        minlen = min(len(ema12), len(ema26))
-        macd_line = [ema12[i] - ema26[i] for i in range(-minlen, 0)]
+        macd_line = [a - b for a, b in zip(ema12[-len(ema26):], ema26)]
         signal_line = ema(macd_line, 9)
 
         if macd_line[-2] < signal_line[-2] and macd_line[-1] > signal_line[-1]:
             return "long"
-        if macd_line[-2] > signal_line[-2] and macd_line[-1] < signal_line[-1]:
+        elif macd_line[-2] > signal_line[-2] and macd_line[-1] < signal_line[-1]:
             return "short"
-        return False
+        else:
+            return False
 
     except Exception as e:
         logging.error(f"[especialista_macd] {e}")
