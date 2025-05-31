@@ -61,9 +61,9 @@ def verificar_posicoes_ativas(cliente, par):
 
 def fetch_candles(par, interval="1m", limit=100):
     try:
-        endpoint = "/api/v1/market/kline"  # CORRIGIDO aqui
+        endpoint = "/api/v3/klines"
         url = f"{BASE_URL}{endpoint}"
-        symbol = par.replace("/", "_")  # CORRIGIDO: usar "_" e não ""
+        symbol = par.replace("/", "_")
 
         params = {
             "symbol": symbol,
@@ -80,7 +80,7 @@ def fetch_candles(par, interval="1m", limit=100):
         data = response.json()
 
         candles = []
-        for item in data.get("data", []):
+        for item in data:
             try:
                 candles.append({
                     "timestamp": int(item[0]),
@@ -94,6 +94,7 @@ def fetch_candles(par, interval="1m", limit=100):
                 print(f"[ERRO] Conversão de candle falhou: {e}")
                 continue
 
+        print(f"[DEBUG] Candles recebidos para {symbol}: {candles}")
         return candles
 
     except Exception as e:
