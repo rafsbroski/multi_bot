@@ -59,7 +59,7 @@ def verificar_posicoes_ativas(cliente, par):
     except Exception:
         return True
 
-def fetch_candles(par, interval="1min", limit=50):
+def fetch_candles(par, interval="1min", limit=20):  # ✅ reduzido para 20
     try:
         symbol = par.replace("/", "-").upper()  # Ex: BTC/USDT → BTC-USDT
         url = f"https://api.kucoin.com/api/v1/market/candles?type={interval}&symbol={symbol}"
@@ -72,12 +72,14 @@ def fetch_candles(par, interval="1min", limit=50):
             return []
 
         data = response.json()
-        if "data" not in data or len(data["data"]) < limit:
+        candles_raw = data.get("data", [])
+
+        if not candles_raw or len(candles_raw) < limit:
             print(f"[ERRO] Lista de candles insuficiente na resposta da KuCoin.")
             return []
 
         candles = []
-        for item in reversed(data["data"][-limit:]):
+        for item in reversed(candles_raw[-limit:]):
             candles.append({
                 "timestamp": int(time.mktime(time.strptime(item[0], "%Y-%m-%dT%H:%M:%S.%fZ"))) * 1000,
                 "open": float(item[1]),
