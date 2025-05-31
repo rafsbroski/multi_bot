@@ -59,39 +59,84 @@ def verificar_posicoes_ativas(cliente, par):
     except Exception:
         return True
 
-def fetch_candles(par, interval="1min", limit=20):  # ✅ reduzido para 20
+def fetch_candles(par, interval="1min", limit=20):
+    symbol_kucoin = par.replace("/", "-").upper()
+    symbol_binance = par.replace("/", "").lower()
+    symbol_coingecko = par.replace("/", "").lower()
+
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+
+    # 1️⃣ KUCOIN
     try:
-        symbol = par.replace("/", "-").upper()  # Ex: BTC/USDT → BTC-USDT
-        url = f"https://api.kucoin.com/api/v1/market/candles?type={interval}&symbol={symbol}"
+        url = f"https://api.kucoin.com/api/v1/market/candles?type={interval}&symbol={symbol_kucoin}"
+        response = httpx.get(url, timeout=10)
+        data = response.json().get("data", [])
 
-        with httpx.Client(timeout=10.0) as client:
-            response = client.get(url)
-
-        if response.status_code != 200:
-            print(f"[ERRO] KuCoin respondeu com status {response.status_code}")
-            return []
-
-        data = response.json()
-        candles_raw = data.get("data", [])
-
-        if not candles_raw or len(candles_raw) < limit:
-            print(f"[ERRO] Lista de candles insuficiente na resposta da KuCoin.")
-            return []
-
-        candles = []
-        for item in reversed(candles_raw[-limit:]):
-            candles.append({
-                "timestamp": int(time.mktime(time.strptime(item[0], "%Y-%m-%dT%H:%M:%S.%fZ"))) * 1000,
-                "open": float(item[1]),
-                "close": float(item[2]),
-                "high": float(item[3]),
-                "low": float(item[4]),
-                "volume": float(item[5])
-            })
-
-        print(f"[DEBUG] Candles recebidos da KuCoin para {par}: {candles}")
-        return candles
-
+        if data and len(data) >= limit:
+            candles = []
+            for item in reversed(data[-limit:]):
+                candles.append({
+                    "timestamp": int(time.mktime(time.strptime(item[0], "%Y-%m-%dT%H:%M:%S.%fZ"))) * 1000,
+                    "open": float(item[1]),
+                    "close": float(item[2]),
+                    "high": float(item[3]),
+                    "low": float(item[4]),
+                    "volume": float(item[5])
+                })
+            print(f"[KUCOIN] Candles para {par}: OK")
+            return candles
+        print("[KUCOIN] Dados insuficientes.")
     except Exception as e:
-        print(f"[ERRO] Falha ao buscar candles da KuCoin: {e}")
-        return []
+        print(f"[KUCOIN] Erro: {e}")
+
+    # 2️⃣ BINANCE
+    try:
+        url = f"https://api.binance.com/api/v3/klines?symbol={symbol_binance.upper()}&interval=1m&limit={limit}"
+        response = httpx.get(url, timeout=10)
+        data = response.json()
+
+        if isinstance(data, list) and len(data) >= limit:
+            candles = []
+            for item in data:
+                candles.append({
+                    "timestamp": int(item[0]),
+                    "open": float(item[1]),
+                    "high": float(item[2]),
+                    "low": float(item[3]),
+                    "close": float(item[4]),
+                    "volume": float(item[5])
+                })
+            print(f"[BINANCE] Candles para {par}: OK")
+            return candles
+        print("[BINANCE] Dados insuficientes.")
+    except Exception as e:
+        print(f"[BINANCE] Erro: {e}")
+
+    # 3️⃣ COINGECKO
+    try:
+        url = f"https://api.coingecko.com/api/v3/coins/{symbol_coingecko}/market_chart?vs_currency=usd&days=1&interval=minutely"
+        response = httpx.get(url, headers=headers, timeout=10)
+        data = response.json().get("prices", [])
+
+        if data and len(data) >= limit:
+            candles = []
+            for item in data[-limit:]:
+                candles.append({
+                    "timestamp": int(item[0]),
+                    "open": float(item[1]),
+                    "close": float(item[1]),
+                    "high": float(item[1]),
+                    "low": float(item[1]),
+                    "volume": 0.0
+                })
+            print(f"[COINGECKO] Candles para {par}: OK")
+            return candles
+        print("[COINGECKO] Dados insuficientes.")
+    except Exception as e:
+        print(f"[COINGECKO] Erro: {e}")
+
+    # Fallback final
+    print(f"[ERRO] Nenhuma API devolveu candles para {par}.")
+    return []
