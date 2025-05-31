@@ -1,28 +1,37 @@
+import pandas as pd
 import logging
 
-def analisar_media_movel(candles, par):
+def analisar_sinal(candles):
     try:
-        if not isinstance(candles, list) or len(candles) < 21:
-            raise ValueError("Estrutura de candles inválida ou insuficiente.")
+        if not candles or len(candles) < 50:
+            logging.error("[especialista_media_movel] Estrutura de candles inválida ou insuficiente.")
+            return None
 
-        closes = []
-        for c in candles:
-            if not isinstance(c, dict):
-                raise ValueError("Candle não é um dicionário.")
-            if not all(k in c for k in ["open", "high", "low", "close", "volume", "timestamp"]):
-                raise ValueError("Candle com campos incompletos.")
-            closes.append(float(c["close"]))
+        df = pd.DataFrame(candles)
+        if df.shape[1] < 5:
+            logging.error("[especialista_media_movel] Estrutura de DataFrame inválida.")
+            return None
 
-        sma_9 = sum(closes[-9:]) / 9
-        sma_21 = sum(closes[-21:]) / 21
+        df.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+        df['close'] = pd.to_numeric(df['close'], errors='coerce')
 
-        if sma_9 > sma_21:
+        if df['close'].isnull().any():
+            logging.error("[especialista_media_movel] Valores inválidos na coluna 'close'.")
+            return None
+
+        df['ma20'] = df['close'].rolling(window=20).mean()
+        df['ma50'] = df['close'].rolling(window=50).mean()
+
+        if df['ma20'].isnull().any() or df['ma50'].isnull().any():
+            return None
+
+        if df['ma20'].iloc[-1] > df['ma50'].iloc[-1] and df['ma20'].iloc[-2] <= df['ma50'].iloc[-2]:
             return "long"
-        elif sma_9 < sma_21:
+        elif df['ma20'].iloc[-1] < df['ma50'].iloc[-1] and df['ma20'].iloc[-2] >= df['ma50'].iloc[-2]:
             return "short"
         else:
-            return False
+            return None
 
     except Exception as e:
-        logging.error(f"[especialista_media_movel] {e}")
-        return False
+        logging.exception(f"[especialista_media_movel] Erro ao analisar sinal: {str(e)}")
+        return None
