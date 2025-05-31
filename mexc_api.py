@@ -59,37 +59,37 @@ def verificar_posicoes_ativas(cliente, par):
     except Exception:
         return True
 
-def fetch_candles(par, interval="1m", limit=50):
+def fetch_candles(par, interval="1min", limit=50):
     try:
-        symbol = par.replace("/", "-").lower()  # ✅ Corrigido para o formato da Pionex
-        url = f"https://api.pionex.com/api/v1/market/kline?symbol={symbol}&interval=1m&limit={limit}"
+        symbol = par.replace("/", "-").upper()  # Ex: BTC/USDT → BTC-USDT
+        url = f"https://api.kucoin.com/api/v1/market/candles?type={interval}&symbol={symbol}"
 
         with httpx.Client(timeout=10.0) as client:
             response = client.get(url)
 
         if response.status_code != 200:
-            print(f"[ERRO] Pionex respondeu com status {response.status_code}")
+            print(f"[ERRO] KuCoin respondeu com status {response.status_code}")
             return []
 
         data = response.json()
         if "data" not in data or len(data["data"]) < limit:
-            print(f"[ERRO] Lista de candles insuficiente ou ausente na resposta da Pionex.")
+            print(f"[ERRO] Lista de candles insuficiente na resposta da KuCoin.")
             return []
 
         candles = []
-        for item in data["data"][-limit:]:
+        for item in reversed(data["data"][-limit:]):
             candles.append({
-                "timestamp": int(item[0]),
+                "timestamp": int(time.mktime(time.strptime(item[0], "%Y-%m-%dT%H:%M:%S.%fZ"))) * 1000,
                 "open": float(item[1]),
-                "high": float(item[2]),
-                "low": float(item[3]),
-                "close": float(item[4]),
+                "close": float(item[2]),
+                "high": float(item[3]),
+                "low": float(item[4]),
                 "volume": float(item[5])
             })
 
-        print(f"[DEBUG] Candles recebidos da Pionex para {par}: {candles}")
+        print(f"[DEBUG] Candles recebidos da KuCoin para {par}: {candles}")
         return candles
 
     except Exception as e:
-        print(f"[ERRO] Falha ao buscar candles da Pionex: {e}")
+        print(f"[ERRO] Falha ao buscar candles da KuCoin: {e}")
         return []
