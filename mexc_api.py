@@ -61,7 +61,7 @@ def verificar_posicoes_ativas(cliente, par):
 
 def fetch_candles(par, interval="1m", limit=50):
     try:
-        symbol = par.replace("/", "_").upper()
+        symbol = par.replace("/", "-").lower()  # ✅ Corrigido para o formato da Pionex
         url = f"https://api.pionex.com/api/v1/market/kline?symbol={symbol}&interval=1m&limit={limit}"
 
         with httpx.Client(timeout=10.0) as client:
