@@ -15,10 +15,16 @@ def main():
     while True:
         for par in PAIRS:
             print(f"\n[VERIFICAÇÃO] Analisando sinal para {par}…")
-            # Supondo que você tenha uma função que pega candles:
             from mexc_api import fetch_candles
             candles = fetch_candles(par, interval=CHECK_INTERVAL)
-            # Para cada especialista, proteja contra estruturas inválidas:
+
+            # DEBUG: imprimir os candles brutos recebidos
+            print(f"[DEBUG] Candles recebidos no main para {par}: {candles}")
+
+            if not candles:
+                print(f"[ERRO] Lista de candles vazia para {par}. Especialistas não serão chamados.")
+                continue
+
             sinais = []
             for bot_fn in [
                 especialista_candle,
@@ -34,7 +40,6 @@ def main():
                     sinal = None
                 sinais.append(sinal)
 
-            # Conta apenas 'long'/'buy' e 'short'/'sell'
             longs  = sum(1 for s in sinais if str(s).lower() in ("long", "buy", "compra"))
             shorts = sum(1 for s in sinais if str(s).lower() in ("short", "sell", "venda"))
             if longs >= 4 and shorts == 0:
@@ -45,7 +50,6 @@ def main():
                 print(f"[INFO] Sem consenso suficiente para {par}. Nenhuma ordem executada.")
                 continue
 
-            # Checa proteção e executa ordem
             if verificar_protecao():
                 print(f"[INFO] Consenso para {par}: {direcao.upper()}. Tentando abrir posição…")
                 sucesso = executar_ordem(par, direcao)
