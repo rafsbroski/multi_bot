@@ -61,50 +61,46 @@ def verificar_posicoes_ativas(cliente, par):
 
 def fetch_candles(par, interval="1m", limit=50):
     try:
-        url = "https://api.binance.com/api/v3/klines"  # 🔄 Binance SPOT (não fapi)
-        symbol = par.replace("/", "").upper()
+        simbolo = par.split("/")[0].lower()
+        vs_currency = par.split("/")[1].lower()
 
+        url = f"https://api.coingecko.com/api/v3/coins/{simbolo}/market_chart"
         params = {
-            "symbol": symbol,
-            "interval": interval,
-            "limit": limit
-        }
-
-        headers = {
-            "User-Agent": "Mozilla/5.0"
+            "vs_currency": vs_currency,
+            "days": "1",
+            "interval": "minutely"
         }
 
         with httpx.Client(timeout=10.0) as client:
-            response = client.get(url, params=params, headers=headers)
+            response = client.get(url, params=params)
 
         if response.status_code != 200:
-            print(f"[ERRO] Binance Spot respondeu com status {response.status_code}")
+            print(f"[ERRO] CoinGecko respondeu com status {response.status_code}")
             return []
 
         data = response.json()
+        prices = data.get("prices", [])
 
-        if not isinstance(data, list) or len(data) < 30:
-            print(f"[ERRO] Lista de candles insuficiente. Recebidos: {len(data)}")
+        if len(prices) < limit:
+            print(f"[ERRO] Lista de candles insuficiente. Recebidos: {len(prices)}")
             return []
 
         candles = []
-        for item in data:
-            try:
-                candles.append({
-                    "timestamp": int(item[0]),
-                    "open": float(item[1]),
-                    "high": float(item[2]),
-                    "low": float(item[3]),
-                    "close": float(item[4]),
-                    "volume": float(item[5])
-                })
-            except Exception as e:
-                print(f"[ERRO] Conversão de candle falhou: {e}")
-                continue
+        for item in prices[-limit:]:
+            timestamp = int(item[0])
+            price = float(item[1])
+            candles.append({
+                "timestamp": timestamp,
+                "open": price,
+                "high": price,
+                "low": price,
+                "close": price,
+                "volume": 0.0
+            })
 
-        print(f"[DEBUG] Candles recebidos da Binance Spot para {symbol}: {candles}")
+        print(f"[DEBUG] Candles recebidos da CoinGecko para {par}: {candles}")
         return candles
 
     except Exception as e:
-        print(f"[ERRO] Falha ao buscar candles da Binance Spot com httpx: {e}")
+        print(f"[ERRO] Falha ao buscar candles da CoinGecko: {e}")
         return []
