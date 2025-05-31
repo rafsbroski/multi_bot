@@ -61,7 +61,7 @@ def verificar_posicoes_ativas(cliente, par):
 
 def fetch_candles(par, interval="1m", limit=50):
     try:
-        url = "https://fapi.binance.com/fapi/v1/klines"  # ✅ FUTUROS da Binance
+        url = "https://fapi.binance.com/fapi/v1/klines"  # ✅ Binance Futures
         symbol = par.replace("/", "").upper()
 
         params = {
@@ -70,7 +70,11 @@ def fetch_candles(par, interval="1m", limit=50):
             "limit": limit
         }
 
-        response = requests.get(url, params=params)
+        headers = {
+            "User-Agent": "Mozilla/5.0"  # 🛡️ evita bloqueios por parte da Binance
+        }
+
+        response = requests.get(url, params=params, headers=headers)
 
         if response.status_code != 200:
             print(f"[ERRO] Binance Futures respondeu com status {response.status_code}")
