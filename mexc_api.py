@@ -71,8 +71,20 @@ def fetch_candles(par, interval="1m", limit=50):
             "interval": "minutely"
         }
 
-        with httpx.Client(timeout=10.0) as client:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (compatible; RafaelBot/1.0)"
+        }
+
+        with httpx.Client(timeout=10.0, headers=headers) as client:
             response = client.get(url, params=params)
+
+        if response.status_code == 429:
+            print(f"[ERRO] CoinGecko: Too Many Requests (429) — limite atingido.")
+            return []
+
+        if response.status_code == 401:
+            print(f"[ERRO] CoinGecko: Unauthorized (401) — tenta usar headers válidos.")
+            return []
 
         if response.status_code != 200:
             print(f"[ERRO] CoinGecko respondeu com status {response.status_code}")
