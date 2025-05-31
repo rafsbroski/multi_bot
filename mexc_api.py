@@ -3,6 +3,7 @@ import time
 import hmac
 import hashlib
 import json
+import random
 from config import MEXC_API_KEY, MEXC_SECRET_KEY
 
 BASE_URL = "https://api.mexc.com"
@@ -72,7 +73,10 @@ def fetch_candles(par, interval="1m", limit=50):
         }
 
         headers = {
-            "User-Agent": "Mozilla/5.0 (compatible; RafaelBot/1.0)"
+            "User-Agent": random.choice([
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Safari/605.1.15"
+            ])
         }
 
         with httpx.Client(timeout=10.0, headers=headers) as client:
@@ -83,7 +87,7 @@ def fetch_candles(par, interval="1m", limit=50):
             return []
 
         if response.status_code == 401:
-            print(f"[ERRO] CoinGecko: Unauthorized (401) — tenta usar headers válidos.")
+            print(f"[ERRO] CoinGecko: Unauthorized (401) — verifica o User-Agent.")
             return []
 
         if response.status_code != 200:
