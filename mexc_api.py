@@ -61,8 +61,8 @@ def verificar_posicoes_ativas(cliente, par):
 
 def fetch_candles(par, interval="1m", limit=50):
     try:
-        url = "https://api.binance.com/api/v3/klines"
-        symbol = par.replace("/", "").upper()  # ✅ Garantir maiúsculas
+        url = "https://fapi.binance.com/fapi/v1/klines"  # ✅ FUTUROS da Binance
+        symbol = par.replace("/", "").upper()
 
         params = {
             "symbol": symbol,
@@ -73,7 +73,7 @@ def fetch_candles(par, interval="1m", limit=50):
         response = requests.get(url, params=params)
 
         if response.status_code != 200:
-            print(f"[ERRO] Binance respondeu com status {response.status_code}")
+            print(f"[ERRO] Binance Futures respondeu com status {response.status_code}")
             return []
 
         try:
@@ -101,9 +101,9 @@ def fetch_candles(par, interval="1m", limit=50):
                 print(f"[ERRO] Conversão de candle falhou: {e}")
                 continue
 
-        print(f"[DEBUG] Candles recebidos da Binance para {symbol}: {candles}")
+        print(f"[DEBUG] Candles recebidos da Binance Futures para {symbol}: {candles}")
         return candles
 
     except Exception as e:
-        print(f"[ERRO] Falha ao buscar candles da Binance: {e}")
+        print(f"[ERRO] Falha ao buscar candles da Binance Futures: {e}")
         return []
