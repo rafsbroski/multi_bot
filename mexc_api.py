@@ -1,4 +1,4 @@
-import requests
+import httpx
 import time
 import hmac
 import hashlib
@@ -44,7 +44,7 @@ def abrir_posicao(cliente, par, direcao, tamanho):
         }
 
         params["sign"] = _assinatura(params, MEXC_SECRET_KEY)
-        response = requests.post(url, headers=_headers(), json=params)
+        response = httpx.post(url, headers=_headers(), json=params)
         return response.status_code == 200
     except Exception as e:
         print(f"Erro ao abrir posição: {e}")
@@ -61,7 +61,7 @@ def verificar_posicoes_ativas(cliente, par):
 
 def fetch_candles(par, interval="1m", limit=50):
     try:
-        url = "https://fapi.binance.com/fapi/v1/klines"  # ✅ Binance Futures
+        url = "https://fapi.binance.com/fapi/v1/klines"
         symbol = par.replace("/", "").upper()
 
         params = {
@@ -71,20 +71,17 @@ def fetch_candles(par, interval="1m", limit=50):
         }
 
         headers = {
-            "User-Agent": "Mozilla/5.0"  # 🛡️ evita bloqueios por parte da Binance
+            "User-Agent": "Mozilla/5.0"
         }
 
-        response = requests.get(url, params=params, headers=headers)
+        with httpx.Client(timeout=10.0) as client:
+            response = client.get(url, params=params, headers=headers)
 
         if response.status_code != 200:
             print(f"[ERRO] Binance Futures respondeu com status {response.status_code}")
             return []
 
-        try:
-            data = response.json()
-        except Exception as e:
-            print(f"[ERRO] JSON inválido da Binance: {e}")
-            return []
+        data = response.json()
 
         if not isinstance(data, list) or len(data) < 30:
             print(f"[ERRO] Lista de candles insuficiente. Recebidos: {len(data)}")
@@ -109,5 +106,5 @@ def fetch_candles(par, interval="1m", limit=50):
         return candles
 
     except Exception as e:
-        print(f"[ERRO] Falha ao buscar candles da Binance Futures: {e}")
+        print(f"[ERRO] Falha ao buscar candles com httpx: {e}")
         return []
