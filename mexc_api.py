@@ -131,4 +131,11 @@ def fetch_candles(par, interval="1min", limit=60):
 
 # ✅ Função adicional para criar cliente
 def criar_cliente():
-    return True  # cliente fictício usado como marcador para a MEXC
+    try:
+        cliente = ClienteMEXC(MEXC_API_KEY, MEXC_SECRET_KEY)
+        saldo = cliente.obter_saldo_total()
+        print(f"[MEXC] Cliente autenticado. Saldo disponível: {saldo}")
+        return cliente
+    except Exception as e:
+        print(f"[MEXC] Falha ao autenticar cliente: {e}")
+        return False
