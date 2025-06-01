@@ -131,13 +131,22 @@ def fetch_candles(par, interval="1min", limit=60):
 
 def criar_cliente():
     try:
-        cliente = httpx.Client(headers=_headers())
-        response = cliente.get(f"{BASE_URL}/api/v2/account/info")
-        if response.status_code == 200:
+        url = f"{BASE_URL}/api/v1/private/account/asset"
+        timestamp = _timestamp()
+        params = {
+            "timestamp": timestamp
+        }
+        assinatura = _assinatura(params, MEXC_SECRET_KEY)
+        params["sign"] = assinatura
+
+        cliente = httpx.Client()
+        response = cliente.post(url, headers=_headers(), json=params)
+
+        if response.status_code == 200 and "data" in response.json():
             print("[MEXC] Cliente autenticado com as chaves configuradas.")
             return True, cliente
         else:
-            print(f"[MEXC] Falha na autenticação do cliente. Código: {response.status_code} - Resposta: {response.text}")
+            print(f"[MEXC] Falha na autenticação. Código: {response.status_code} - Resposta: {response.text}")
             return False, None
     except Exception as e:
         print(f"[MEXC] Erro ao autenticar cliente: {e}")
