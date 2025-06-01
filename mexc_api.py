@@ -4,7 +4,7 @@ import hmac
 import hashlib
 from config import MEXC_API_KEY, MEXC_SECRET_KEY
 
-BASE_URL = "https://api.mexc.com"
+BASE_URL = "https://contract.mexc.com"
 
 def _assinatura(params, secret_key):
     query_string = '&'.join(f"{k}={v}" for k, v in sorted(params.items()))
