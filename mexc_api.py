@@ -131,7 +131,7 @@ def fetch_candles(par, interval="1min", limit=60):
 
 def criar_cliente():
     try:
-        url = f"{BASE_URL}/api/v1/private/account/asset"
+        url = f"{BASE_URL}/api/v3/account"  # ✅ Endpoint correto da MEXC
         timestamp = _timestamp()
         params = {
             "timestamp": timestamp
@@ -140,9 +140,9 @@ def criar_cliente():
         params["sign"] = assinatura
 
         cliente = httpx.Client(timeout=20.0)
-        response = cliente.post(url, headers=_headers(), json=params)
+        response = cliente.get(url, headers=_headers(), params=params)
 
-        if response.status_code == 200 and "data" in response.json():
+        if response.status_code == 200 and "balances" in response.json():
             print("[MEXC] Cliente autenticado com as chaves configuradas.")
             return True, cliente
         else:
