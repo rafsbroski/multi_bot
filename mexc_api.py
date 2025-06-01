@@ -21,16 +21,16 @@ def _timestamp():
 
 def abrir_posicao(cliente, par, direcao, tamanho):
     try:
-        endpoint = "/api/v1/order"
+        endpoint = "/api/v1/private/order/submit"
         url = BASE_URL + endpoint
-        lado = "BUY" if direcao == "long" else "SELL"
+        lado = "OPEN_LONG" if direcao == "long" else "OPEN_SHORT"
 
         params = {
             "symbol": par.replace("/", "_"),
-            "price": "",
+            "price": "",  # Market order
             "vol": str(tamanho),
             "side": lado,
-            "type": 1,
+            "type": 1,  # Market
             "open_type": "isolated",
             "position_id": 0,
             "leverage": 50,
@@ -43,17 +43,19 @@ def abrir_posicao(cliente, par, direcao, tamanho):
 
         params["sign"] = _assinatura(params, MEXC_SECRET_KEY)
         response = httpx.post(url, headers=_headers(), json=params)
+        print(f"[MEXC] Abrir posição {lado} - Código: {response.status_code} - Resposta: {response.text}")
         return response.status_code == 200
     except Exception as e:
-        print(f"Erro ao abrir posição: {e}")
+        print(f"[MEXC] Erro ao abrir posição: {e}")
         return False
 
 def fechar_posicoes_anteriores(cliente, par):
-    pass  # ainda por implementar
+    # Ainda não implementado
+    pass
 
 def verificar_posicoes_ativas(cliente, par):
     try:
-        return False
+        return False  # Placeholder
     except Exception:
         return True
 
@@ -66,6 +68,7 @@ def fetch_candles(par, interval="1min", limit=60):
         "User-Agent": "Mozilla/5.0"
     }
 
+    # KUCOIN
     try:
         url = f"https://api.kucoin.com/api/v1/market/candles?type={interval}&symbol={symbol_kucoin}"
         response = httpx.get(url, timeout=10)
@@ -86,6 +89,7 @@ def fetch_candles(par, interval="1min", limit=60):
     except Exception as e:
         print(f"[KUCOIN] Erro: {e}")
 
+    # BINANCE
     try:
         url = f"https://api.binance.com/api/v3/klines?symbol={symbol_binance.upper()}&interval=1m&limit={limit}"
         response = httpx.get(url, timeout=10)
@@ -106,6 +110,7 @@ def fetch_candles(par, interval="1min", limit=60):
     except Exception as e:
         print(f"[BINANCE] Erro: {e}")
 
+    # COINGECKO
     try:
         url = f"https://api.coingecko.com/api/v3/coins/{symbol_coingecko}/market_chart?vs_currency=usd&days=1&interval=minutely"
         response = httpx.get(url, headers=headers, timeout=10)
@@ -130,4 +135,4 @@ def fetch_candles(par, interval="1min", limit=60):
     return []
 
 def criar_cliente():
-    return True  # Placeholder para compatibilidade
+    return True  # Placeholder
