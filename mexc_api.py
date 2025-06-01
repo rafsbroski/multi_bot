@@ -129,12 +129,10 @@ def fetch_candles(par, interval="1min", limit=60):
     print(f"[ERRO] Nenhuma API devolveu candles para {par}.")
     return []
 
-# ✅ Função adicional para criar cliente
 def criar_cliente():
     try:
         cliente = httpx.Client(headers=_headers())
-        # Verificação básica (opcional, pode remover isto se a API aceitar direto)
-        response = cliente.get(f"{BASE_URL}/api/v1/private/account/assets")
+        response = cliente.get(f"{BASE_URL}/api/v2/account/info")
         if response.status_code == 200:
             print("[MEXC] Cliente autenticado com as chaves configuradas.")
             return True, cliente
