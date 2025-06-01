@@ -19,6 +19,25 @@ def _headers():
 def _timestamp():
     return int(time.time() * 1000)
 
+def criar_cliente():
+    try:
+        headers = _headers()
+        url = f"{BASE_URL}/api/v1/private/account/assets"
+        params = {
+            "timestamp": _timestamp()
+        }
+        params["sign"] = _assinatura(params, MEXC_SECRET_KEY)
+        response = httpx.get(url, headers=headers, params=params)
+        if response.status_code == 200:
+            print("[MEXC] Cliente autenticado com sucesso.")
+            return True
+        else:
+            print(f"[MEXC] Falha na autenticação do cliente. Código: {response.status_code} - Resposta: {response.text}")
+            return False
+    except Exception as e:
+        print(f"[MEXC] Erro ao criar cliente: {e}")
+        return False
+
 def abrir_posicao(cliente, par, direcao, tamanho):
     try:
         endpoint = "/api/v1/private/order/submit"
@@ -27,10 +46,10 @@ def abrir_posicao(cliente, par, direcao, tamanho):
 
         params = {
             "symbol": par.replace("/", "_"),
-            "price": "",  # Market order
+            "price": "",
             "vol": str(tamanho),
             "side": lado,
-            "type": 1,  # Market
+            "type": 1,
             "open_type": "isolated",
             "position_id": 0,
             "leverage": 50,
@@ -50,8 +69,7 @@ def abrir_posicao(cliente, par, direcao, tamanho):
         return False
 
 def fechar_posicoes_anteriores(cliente, par):
-    # Ainda não implementado
-    pass
+    pass  # A implementar
 
 def verificar_posicoes_ativas(cliente, par):
     try:
@@ -61,7 +79,7 @@ def verificar_posicoes_ativas(cliente, par):
 
 def fetch_candles(par, interval="1min", limit=60):
     symbol_kucoin = par.replace("/", "-").upper()
-    symbol_binance = par.replace("/", "").lower()
+    symbol_binance = par.replace("/", "").upper()
     symbol_coingecko = par.replace("/", "").lower()
 
     headers = {
@@ -91,7 +109,7 @@ def fetch_candles(par, interval="1min", limit=60):
 
     # BINANCE
     try:
-        url = f"https://api.binance.com/api/v3/klines?symbol={symbol_binance.upper()}&interval=1m&limit={limit}"
+        url = f"https://api.binance.com/api/v3/klines?symbol={symbol_binance}&interval=1m&limit={limit}"
         response = httpx.get(url, timeout=10)
         data = response.json()
         if isinstance(data, list) and len(data) >= limit:
@@ -133,6 +151,3 @@ def fetch_candles(par, interval="1min", limit=60):
 
     print(f"[ERRO] Nenhuma API devolveu candles para {par}.")
     return []
-
-def criar_cliente():
-    return True  # Placeholder
