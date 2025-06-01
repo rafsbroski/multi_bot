@@ -27,6 +27,7 @@ def analisar_media_movel(candles, par):
         df['ma50'] = df['close'].rolling(window=50).mean()
 
         if df[['ma20', 'ma50']].isnull().any().any():
+            logging.error(f"[especialista_media_movel] Médias móveis não estão completas para {par}.")
             return None
 
         if df['ma20'].iloc[-1] > df['ma50'].iloc[-1] and df['ma20'].iloc[-2] <= df['ma50'].iloc[-2]:

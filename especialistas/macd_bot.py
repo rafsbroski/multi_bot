@@ -4,8 +4,8 @@ import logging
 def analisar_macd(candles, par):
     try:
         # Validação da estrutura dos candles
-        if not candles or not isinstance(candles, list) or len(candles) < 60:
-            logging.error(f"[especialista_macd] DataFrame inválido ou com menos de 60 candles para {par}.")
+        if not candles or not isinstance(candles, list) or len(candles) < 30:
+            logging.error(f"[especialista_macd] DataFrame inválido ou com menos de 30 candles para {par}.")
             return None
 
         df = pd.DataFrame(candles)
@@ -18,6 +18,9 @@ def analisar_macd(candles, par):
 
         # Converte valores de 'close' para número
         df['close'] = pd.to_numeric(df['close'], errors='coerce')
+        if df['close'].isnull().any():
+            logging.error(f"[especialista_macd] Valores 'close' inválidos para {par}.")
+            return None
 
         # Calcula MACD
         df['ema12'] = df['close'].ewm(span=12, adjust=False).mean()
