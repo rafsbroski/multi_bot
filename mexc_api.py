@@ -128,3 +128,7 @@ def fetch_candles(par, interval="1min", limit=60):
 
     print(f"[ERRO] Nenhuma API devolveu candles para {par}.")
     return []
+
+# ✅ Função adicional para criar cliente
+def criar_cliente():
+    return True  # cliente fictício usado como marcador para a MEXC
