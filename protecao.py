@@ -3,6 +3,9 @@ from telegram_alerts import notificar_telegram
 
 def verificar_limites(cliente):
     try:
+        if cliente is None:
+            raise ValueError("Cliente não está definido (None)")
+
         capital = cliente.obter_saldo_total()
         if capital < CAPITAL_MINIMO:
             if TELEGRAM_ATIVO:
@@ -16,6 +19,9 @@ def verificar_limites(cliente):
 
 def aplicar_stop_loss(cliente, par):
     try:
+        if cliente is None:
+            raise ValueError("Cliente não está definido (None)")
+
         cliente.definir_stop_loss_percentual(par, STOP_LOSS_PERCENTUAL)
     except Exception as e:
         if TELEGRAM_ATIVO:
