@@ -15,7 +15,11 @@ from mexc_api import fetch_candles, criar_cliente
 def main():
     index = 0
     forcar_entrada = True  # 👈 Simulação de entrada
-    _, cliente = criar_cliente()
+    sucesso, cliente = criar_cliente()
+
+    if not sucesso or cliente is None:
+        print("[ERRO] Cliente MEXC não pôde ser autenticado. Encerrando execução.")
+        return
 
     while True:
         par = PAIRS[index % len(PAIRS)]
