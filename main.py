@@ -1,4 +1,5 @@
 import time
+import requests
 from config import PAIRS, CHECK_INTERVAL
 from especialistas import (
     especialista_candle,
@@ -12,6 +13,7 @@ from protecao import verificar_protecao
 from telegram_alerts import enviar_mensagem
 from mexc_api import fetch_candles, criar_cliente
 
+
 def main():
     index = 0
     forcar_entrada = True  # 👈 Simulação de entrada
@@ -23,12 +25,17 @@ def main():
 
     # 👇 Teste direto de ligação à MEXC
     try:
-        resposta = cliente.account.get_account_information()
-        print("[TESTE] Ligação à MEXC bem-sucedida.")
-        print(f"[DEBUG] Info da conta: {resposta}")
+        print("[TESTE] A testar ligação externa à API da MEXC...")
+        resposta = requests.get("https://api.mexc.com/api/v1/time", timeout=10)
+        if resposta.status_code == 200:
+            print("[TESTE] Ligação externa à MEXC confirmada com sucesso.")
+        else:
+            print(f"[ERRO] Falha na ligação externa à MEXC. Código {resposta.status_code}")
+            enviar_mensagem(f"❌ Falha na ligação externa à MEXC. Código {resposta.status_code}")
+            return
     except Exception as e:
-        print(f"[ERRO] Falha ao testar ligação à MEXC: {e}")
-        enviar_mensagem(f"❌ Falha ao testar ligação à MEXC: {e}")
+        print(f"[ERRO] Erro ao testar ligação externa à MEXC: {e}")
+        enviar_mensagem(f"❌ Erro ao testar ligação externa à MEXC: {e}")
         return
 
     while True:
@@ -96,6 +103,7 @@ def main():
             enviar_mensagem(f"⚠️ Proteção ativada. Entrada em {par} cancelada.")
 
         time.sleep(CHECK_INTERVAL)
+
 
 if __name__ == "__main__":
     main()
