@@ -21,6 +21,16 @@ def main():
         print("[ERRO] Cliente MEXC não pôde ser autenticado. Encerrando execução.")
         return
 
+    # 👇 Teste direto de ligação à MEXC
+    try:
+        resposta = cliente.account.get_account_information()
+        print("[TESTE] Ligação à MEXC bem-sucedida.")
+        print(f"[DEBUG] Info da conta: {resposta}")
+    except Exception as e:
+        print(f"[ERRO] Falha ao testar ligação à MEXC: {e}")
+        enviar_mensagem(f"❌ Falha ao testar ligação à MEXC: {e}")
+        return
+
     while True:
         par = PAIRS[index % len(PAIRS)]
         index += 1
