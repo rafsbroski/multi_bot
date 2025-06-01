@@ -139,7 +139,7 @@ def criar_cliente():
         assinatura = _assinatura(params, MEXC_SECRET_KEY)
         params["sign"] = assinatura
 
-        cliente = httpx.Client()
+        cliente = httpx.Client(timeout=20.0)
         response = cliente.post(url, headers=_headers(), json=params)
 
         if response.status_code == 200 and "data" in response.json():
