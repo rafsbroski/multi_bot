@@ -128,3 +128,6 @@ def fetch_candles(par, interval="1min", limit=60):
 
     print(f"[ERRO] Nenhuma API devolveu candles para {par}.")
     return []
+
+def criar_cliente():
+    return True  # Placeholder para compatibilidade
