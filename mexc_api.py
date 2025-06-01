@@ -57,7 +57,7 @@ def verificar_posicoes_ativas(cliente, par):
     except Exception:
         return True
 
-def fetch_candles(par, interval="1min", limit=20):
+def fetch_candles(par, interval="1min", limit=60):
     symbol_kucoin = par.replace("/", "-").upper()
     symbol_binance = par.replace("/", "").lower()
     symbol_coingecko = par.replace("/", "").lower()
@@ -92,7 +92,7 @@ def fetch_candles(par, interval="1min", limit=20):
         data = response.json()
         if isinstance(data, list) and len(data) >= limit:
             candles = []
-            for item in data:
+            for item in data[-limit:]:
                 candles.append({
                     "timestamp": int(item[0]),
                     "open": float(item[1]),
