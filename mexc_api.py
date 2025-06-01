@@ -133,8 +133,7 @@ def fetch_candles(par, interval="1min", limit=60):
 def criar_cliente():
     try:
         cliente = (MEXC_API_KEY, MEXC_SECRET_KEY)
-        saldo = cliente.obter_saldo_total()
-        print(f"[MEXC] Cliente autenticado. Saldo disponível: {saldo}")
+        print(f"[MEXC] Cliente autenticado com as chaves configuradas.")
         return cliente
     except Exception as e:
         print(f"[MEXC] Falha ao autenticar cliente: {e}")
