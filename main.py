@@ -15,7 +15,7 @@ from mexc_api import fetch_candles, criar_cliente
 def main():
     index = 0
     forcar_entrada = True  # 👈 Simulação de entrada
-    cliente = criar_cliente()
+    _, cliente = criar_cliente()
 
     while True:
         par = PAIRS[index % len(PAIRS)]
