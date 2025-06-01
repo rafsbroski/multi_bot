@@ -34,11 +34,15 @@ def main():
         # 👇 BLOCO DE TESTE FORÇADO — executa 1 vez
         if forcar_entrada:
             print("[SIMULAÇÃO] A forçar uma entrada LONG em BTC/USDT...")
-            sucesso = executar_ordem("BTC/USDT", "long")
-            if sucesso:
-                enviar_mensagem("🧪 Ordem de TESTE LONG em BTC/USDT executada.")
+            if verificar_protecao(cliente):
+                sucesso = executar_ordem("BTC/USDT", "long")
+                if sucesso:
+                    enviar_mensagem("🧪 Ordem de TESTE LONG em BTC/USDT executada.")
+                else:
+                    enviar_mensagem("❌ Falha ao executar ordem de teste.")
             else:
-                enviar_mensagem("❌ Falha ao executar ordem de teste.")
+                print("[FORÇADO] Proteção ativa, ordem forçada cancelada.")
+                enviar_mensagem("⚠️ Proteção ativa, ordem forçada cancelada.")
             forcar_entrada = False  # Não repete
 
         sinais = []
