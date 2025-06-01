@@ -1,42 +1,42 @@
-import pandas as pd
 import logging
 
 def analisar_macd(candles, par):
     try:
-        if not candles:
-            logging.error(f"[especialista_macd] Lista de candles vazia para {par}.")
+        if not isinstance(candles, list) or len(candles) < 35:
+            raise ValueError("Estrutura de candles inválida ou insuficiente.")
+
+        closes = []
+        for c in candles:
+            if isinstance(c, dict) and "close" in c:
+                closes.append(float(c["close"]))
+            elif isinstance(c, (list, tuple)) and len(c) > 4:
+                closes.append(float(c[4]))
+            else:
+                raise ValueError("Formato de candle inválido.")
+
+        def ema(data, period):
+            multiplier = 2 / (period + 1)
+            ema_values = [sum(data[:period]) / period]
+            for price in data[period:]:
+                ema_values.append((price - ema_values[-1]) * multiplier + ema_values[-1])
+            return ema_values
+
+        ema12 = ema(closes, 12)
+        ema26 = ema(closes, 26)
+        if len(ema26) < len(ema12):
+            ema12 = ema12[-len(ema26):]
+        macd_line = [a - b for a, b in zip(ema12, ema26)]
+        signal_line = ema(macd_line, 9)
+
+        if len(signal_line) < 2:
             return None
 
-        logging.debug(f"[especialista_macd] Candles recebidos para {par}: {candles[:3]}")
-
-        if not isinstance(candles[0], dict):
-            logging.error(f"[especialista_macd] Formato inválido dos candles para {par}. Esperado dicionário.")
-            return None
-
-        df = pd.DataFrame(candles)
-
-        if not {'open', 'high', 'low', 'close', 'volume'}.issubset(df.columns):
-            logging.error(f"[especialista_macd] Campos essenciais em falta nos candles para {par}.")
-            return None
-
-        df = df[['open', 'high', 'low', 'close', 'volume']].copy()
-        df = df.apply(pd.to_numeric, errors='coerce')
-
-        if df.isnull().values.any() or len(df) < 30:
-            logging.error(f"[especialista_macd] DataFrame inválido ou com menos de 30 candles para {par}.")
-            return None
-
-        ema12 = df['close'].ewm(span=12, adjust=False).mean()
-        ema26 = df['close'].ewm(span=26, adjust=False).mean()
-        macd = ema12 - ema26
-        signal = macd.ewm(span=9, adjust=False).mean()
-
-        if macd.iloc[-1] > signal.iloc[-1] and macd.iloc[-2] <= signal.iloc[-2]:
+        if macd_line[-1] > signal_line[-1] and macd_line[-2] <= signal_line[-2]:
             return "long"
-        elif macd.iloc[-1] < signal.iloc[-1] and macd.iloc[-2] >= signal.iloc[-2]:
+        elif macd_line[-1] < signal_line[-1] and macd_line[-2] >= signal_line[-2]:
             return "short"
         return None
 
     except Exception as e:
-        logging.exception(f"[especialista_macd] Erro ao analisar sinal para {par}: {str(e)}")
+        logging.error(f"[especialista_macd] {e}")
         return None

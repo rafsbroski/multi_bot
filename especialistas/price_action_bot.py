@@ -17,9 +17,8 @@ def analisar_price_action(candles, par):
             return "long"
         elif closes[-1] < min(closes[-5:-1]):
             return "short"
-        else:
-            return False
+        return None
 
     except Exception as e:
         logging.error(f"[especialista_price_action] {e}")
-        return False
+        return None

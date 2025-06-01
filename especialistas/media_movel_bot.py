@@ -7,14 +7,11 @@ def analisar_media_movel(candles, par):
             logging.error(f"[especialista_media_movel] Lista de candles vazia para {par}.")
             return None
 
-        logging.debug(f"[especialista_media_movel] Candles recebidos para {par}: {candles[:3]}")
-
         if not isinstance(candles[0], dict):
             logging.error(f"[especialista_media_movel] Formato inválido dos candles para {par}. Esperado dicionário.")
             return None
 
         df = pd.DataFrame(candles)
-
         if not {'open', 'high', 'low', 'close', 'volume'}.issubset(df.columns):
             logging.error(f"[especialista_media_movel] Campos essenciais em falta nos candles para {par}.")
             return None

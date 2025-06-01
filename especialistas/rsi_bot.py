@@ -26,8 +26,8 @@ def analisar_rsi(candles, par):
             return "long"
         if rsi > 70:
             return "short"
-        return False
+        return None
 
     except Exception as e:
         logging.error(f"[especialista_rsi] {e}")
-        return False
+        return None
