@@ -132,7 +132,7 @@ def fetch_candles(par, interval="1min", limit=60):
 # ✅ Função adicional para criar cliente
 def criar_cliente():
     try:
-        cliente = ClienteMEXC(MEXC_API_KEY, MEXC_SECRET_KEY)
+        cliente = Cliente(MEXC_API_KEY, MEXC_SECRET_KEY)
         saldo = cliente.obter_saldo_total()
         print(f"[MEXC] Cliente autenticado. Saldo disponível: {saldo}")
         return cliente
