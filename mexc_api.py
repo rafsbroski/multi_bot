@@ -132,9 +132,15 @@ def fetch_candles(par, interval="1min", limit=60):
 # ✅ Função adicional para criar cliente
 def criar_cliente():
     try:
-        cliente = (MEXC_API_KEY, MEXC_SECRET_KEY)
-        print(f"[MEXC] Cliente autenticado com as chaves configuradas.")
-        return cliente
+        cliente = httpx.Client(headers=_headers())
+        # Verificação básica (opcional, pode remover isto se a API aceitar direto)
+        response = cliente.get(f"{BASE_URL}/api/v1/private/account/assets")
+        if response.status_code == 200:
+            print("[MEXC] Cliente autenticado com as chaves configuradas.")
+            return True, cliente
+        else:
+            print(f"[MEXC] Falha na autenticação do cliente. Código: {response.status_code} - Resposta: {response.text}")
+            return False, None
     except Exception as e:
-        print(f"[MEXC] Falha ao autenticar cliente: {e}")
-        return False
+        print(f"[MEXC] Erro ao autenticar cliente: {e}")
+        return False, None
