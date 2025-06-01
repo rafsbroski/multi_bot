@@ -14,6 +14,8 @@ from mexc_api import fetch_candles
 
 def main():
     index = 0
+    forcar_entrada = True  # 👈 Simulação de entrada
+
     while True:
         par = PAIRS[index % len(PAIRS)]
         index += 1
@@ -27,6 +29,16 @@ def main():
             print(f"[ERRO] Lista de candles vazia ou insuficiente para {par}.")
             time.sleep(CHECK_INTERVAL)
             continue
+
+        # 👇 BLOCO DE TESTE FORÇADO — executa 1 vez
+        if forcar_entrada:
+            print("[SIMULAÇÃO] A forçar uma entrada LONG em BTC/USDT...")
+            sucesso = executar_ordem("BTC/USDT", "long")
+            if sucesso:
+                enviar_mensagem("🧪 Ordem de TESTE LONG em BTC/USDT executada.")
+            else:
+                enviar_mensagem("❌ Falha ao executar ordem de teste.")
+            forcar_entrada = False  # Não repete
 
         sinais = []
         for bot_fn in [
