@@ -10,13 +10,10 @@ from especialistas import (
 from trading import executar_ordem
 from protecao import verificar_protecao
 from telegram_alerts import enviar_mensagem
-from mexc_api import fetch_candles, criar_cliente
+from mexc_api import fetch_candles
 
 def main():
-    cliente = criar_cliente()  # ✅ Cliente criado corretamente
     index = 0
-    entrada_forcada = True  # Apenas para a primeira execução
-
     while True:
         par = PAIRS[index % len(PAIRS)]
         index += 1
@@ -28,20 +25,6 @@ def main():
 
         if not candles or len(candles) < 20:
             print(f"[ERRO] Lista de candles vazia ou insuficiente para {par}.")
-            time.sleep(CHECK_INTERVAL)
-            continue
-
-        # 🔥 Simulação de entrada forçada apenas 1 vez
-        if entrada_forcada and par == "BTC/USDT":
-            entrada_forcada = False
-            if verificar_protecao(cliente):
-                print(f"[FORÇADO] Ordem LONG forçada em {par}.")
-                sucesso = executar_ordem(par, "long")
-                if sucesso:
-                    enviar_mensagem(f"✅ Ordem LONG forçada executada em {par}.")
-            else:
-                print(f"[FORÇADO] Proteção ativa, ordem forçada cancelada.")
-                enviar_mensagem(f"⚠️ Proteção ativa, ordem forçada cancelada.")
             time.sleep(CHECK_INTERVAL)
             continue
 
@@ -72,7 +55,7 @@ def main():
             time.sleep(CHECK_INTERVAL)
             continue
 
-        if verificar_protecao(cliente):
+        if verificar_protecao():
             print(f"[INFO] Consenso para {par}: {direcao.upper()}. Tentando abrir posição…")
             sucesso = executar_ordem(par, direcao)
             if sucesso:
