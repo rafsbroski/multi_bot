@@ -139,7 +139,7 @@ def criar_cliente():
         assinatura = _assinatura(params, MEXC_SECRET_KEY)
         params["sign"] = assinatura
 
-        cliente = httpx.Client(timeout=20.0)
+        cliente = httpx.Client(timeout=httpx.Timeout(10.0))
         response = cliente.get(url, headers=_headers(), params=params)
 
         if response.status_code == 200 and "balances" in response.json():
