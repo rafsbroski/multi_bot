@@ -19,11 +19,9 @@ def _headers():
 def _timestamp():
     return int(time.time() * 1000)
 
-<<<<<<< HEAD
 def criar_cliente():
     try:
         url = f"{BASE_URL}/api/v1/private/account/assets"
-=======
 def abrir_posicao(cliente, par, direcao, tamanho):
     try:
         endpoint = "/api/v1/order"
@@ -137,7 +135,6 @@ def fetch_candles(par, interval="1min", limit=60):
 def criar_cliente():
     try:
         url = f"{BASE_URL}/api/v3/account"  # ✅ Endpoint correto da MEXC
->>>>>>> 9cf9a014c66b968db3c723ab12fe6e0bd0212e91
         timestamp = _timestamp()
         params = {
             "timestamp": timestamp
@@ -146,15 +143,12 @@ def criar_cliente():
         params["sign"] = assinatura
 
         cliente = httpx.Client(timeout=httpx.Timeout(10.0))
-<<<<<<< HEAD
         response = cliente.post(url, headers=_headers(), json=params)
 
         if response.status_code == 200 and "data" in response.json():
-=======
         response = cliente.get(url, headers=_headers(), params=params)
 
         if response.status_code == 200 and "balances" in response.json():
->>>>>>> 9cf9a014c66b968db3c723ab12fe6e0bd0212e91
             print("[MEXC] Cliente autenticado com as chaves configuradas.")
             return True, cliente
         else:
